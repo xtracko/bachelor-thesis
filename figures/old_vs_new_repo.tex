@@ -1,0 +1,83 @@
+\begin{tikzpicture}[
+grow via three points={one child at (0.8,-1.2em) and two children at (0.8,-1.2em) and (0.8,-2.4em)},
+edge from parent path={($(\tikzparentnode\tikzparentanchor)+(.4cm,0pt)$) |- (\tikzchildnode\tikzchildanchor)},
+growth parent anchor=west,
+parent anchor=south west,
+every child node/.style={anchor=west}
+]
+\node at (0,-2em) {EACirc}
+	child { node [font=\bf,text=magenta] {EACirc}
+		child { node {circuit} }
+		child { node {evaluators} }
+		child { node [font=\bf,text=cyan] {galib} }
+		child { node {generators} }
+		child { node {projects}
+			child { node {caesar} }
+			child { node {estream} }
+			child { node {files} }
+			child { node {pregenerated\_tv} }
+			child { node {sha3} }
+		}
+		child [missing] {}
+		child [missing] {}
+		child [missing] {}
+		child [missing] {}
+		child [missing] {}
+		child { node {self\_tests} }
+		child { node [font=\bf,text=cyan] {tinyXML} }
+	}
+	child [missing] {}
+	child [missing] {}
+	child [missing] {}
+	child [missing] {}
+	child [missing] {}
+	child [missing] {}
+	child [missing] {}
+	child [missing] {}
+	child [missing] {}
+	child [missing] {}
+	child [missing] {}
+	child [missing] {}
+	child { node [font=\bf,text=magenta] {Oneclick}
+	};
+	
+\node at (6.5, -4) [single arrow, draw, single arrow head extend=.5cm] {changed to};
+		
+\node at (9, 0) {EACirc}
+	child { node [font=\bf,text=magenta] {eacirc}
+		child { node {circuit} }
+		child { node {evaluators} }
+		child { node {generators} }
+		child { node {projects}
+			child { node {files} }
+			child { node {pregenerated\_tv} }
+		}
+		child [missing] {}
+		child [missing] {}
+		child { node {self\_tests} }
+	}
+	child [missing] {}
+	child [missing] {}
+	child [missing] {}
+	child [missing] {}
+	child [missing] {}
+	child [missing] {}
+	child [missing] {}
+	child { node {libs}
+		child { node [font=\bf,text=cyan] {catch} }
+		child { node [font=\bf,text=cyan] {galib} }
+		child { node [font=\bf,text=cyan] {tinyXML} }
+	}
+	child [missing] {}
+	child [missing] {}
+	child [missing] {}
+	child { node [font=\bf,text=magenta] {oneclick} }
+	child { node {projects}
+		child { node [font=\bf,text=cyan] {caesar} }
+		child { node [font=\bf,text=cyan] {estream} }
+		child { node [font=\bf,text=cyan] {sha3} }
+	};
+	
+	\node at (1,-9) [scale=0.8,shape=circle,fill=magenta,label=right:executable] {};
+	\node at (5,-9) [scale=0.8,shape=circle,fill=cyan,label=right:static library] {};
+\end{tikzpicture}
