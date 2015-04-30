@@ -46,7 +46,6 @@
 }
 
 
-
 \begin{document}
 \FrontMatter
 	\ThesisTitlePage
@@ -66,12 +65,32 @@
 	\tableofcontents
 
 \MainMatter
+\chapter{Introduction}
+Random data and the concept of randomness are used in many branches of informatics. However one of the most fundamental usage of these principles is in cryptography and IT security. For instance let there be an communication among several entities. The main content of the communication is mend to stay hidden from the others, thus the communication needs to be encrypted by some chosen encryption protocol. The potential attacker \footnote{The one who wants to know the hidden content of the encrypted communication without permission of legal participants.} could intercept some encrypted messages and subject them to analysis. On the basis of certain traits of the protocol or similarities among individual messages the encryption could be broken and the hidden content of the communication could be read by the attacker. Thus the goal of encryption protocols is that the encrypted messages would not be similar or would not have some characteristic traits. In other words the encrypted messages must look like random data to the attacker. But these constraints are very difficult to provide.
+
+That is why have been created tools to test randomness and thus quality of ciphers. One of these tools is called EACirc and is developed at Faculty of Informatics at Masaryk University in CRoCS laboratory (Centre for Research on Cryptography and Security). It can tell how much are the input data close to a referential random data. \footnote{This is only an approximative explanation. The exact definition and meaning of EACirc results are described in Martin Ukrop's thesis Usage of evolvable circuit for statistical testing of randomness. \cite{ukrop_thesis}} To achieve that it uses raw computation power. But the computations made are not run in parallel and doing that could significantly speed-up the whole process. Faster evaluation could advance capabilities of EACirc and help it to test the randomness in much more detail.
+
+The speed-up of EACirc is achieved with running some chosen computations on a GPU. The GPU must have got a build-in support of a general purpose programming (GPGPU). Such chip can perform not only algorithms used in rendering of computer graphic but also almost every other algorithm that is runnable on a CPU. The main difference against CPU is that the CPU is optimized to minimize latency whereas GPU is optimized to maximize throughput. Latency is a number meaning how much time is going to take a single instruction to load needed data and to execute the instruction. On the other hand throughput is a number meaning how much data the instruction can process per one time unit. \footnote{In current common computation model it is almost impossible to reduce latency together with the growth of throughput on a one device. The more data we load the longer time it takes.} Since some parts of EACirc processes a lot of data with algorithms, which does not need to be optimized for latency \footnote{An algorithm that needs to be optimized for latency in order to maximize performance is that one that has lots of edges in it's control flow graph.}, the usage of GPU's is suitable.
+
+Because GPGPU programming needs a specially enhanced hardware from the manufacturer there are several different solutions on the market. The solution that is used for this thesis is called CUDA \cite{about_cuda} and it's a proprietary technology developed by NVIDIA. \cite{nvidia} The decision to use CUDA was made by my advisor.
+
+Since the performance of GPGPU is dependable on used hardware the achieved speed-up was measured by an experimental method. The benchmarks took place particularly on machines that laboratory of CRoCS is using for own computations and are capable to run a CUDA code.
+
+\medskip
+
+To set the project of EACirc to use the CUDA technology required non-trivial intervention to settings for building the project from the sources aka the makefiles. This intervention would have resulted in a long-term unmaintainable and chaotic project if the previous workflow would have been preserved.  To prevent that the secondary objective of this thesis was to improve the previous build-system of the EACirc project using the open-source CMake \cite{cmake} supportive tool developed by Kitware \cite{kitware} corporation.
+
+
+\chapter{CUDA}
+
+
+
 \chapter{CMake}
-The EACirc sources mainly consists of \emph{C} and \emph{C++} code. The code was divided into reasonably logical sections but the overall structure and concept of the project were monolithic.\footnote{A monolithic binary is an executable that does not need any other dependencies or resources at a runtime. In other words, the binary is independent.} This led to compilation of all sources into one big executable of approximately 9~MB which took some non-trivial time. This design did not allow scaling.
+The EACirc sources mainly consists of \emph{C} and \emph{C++} code. The code was divided into reasonably logical sections but the overall structure and concept of the project were monolithic.\footnote{A monolithic binary is an executable that does not need any other dependencies or resources at a runtime. In other words, the binary is independent.} This led to compilation of all sources into one big executable of approximately 9~MB which took some non-trivial time.
 
 On top of this EACirc is developed as a cross-platform application. To provide native builds for each supported platform (Windows \cite{win} and Linux) special makefile or an IDE specific project file were used which described how to build the application. When a change in the build was introduced, e.g. a new source file was added, the change had to be manually implemented to all makefiles to provide consistency. This workflow was not easy to maintain as the violation of these rules could cause an uncomfortable pitfall.
 
-To solve these problems the CMake \cite{cmake} tool was integrated into the project of EACirc. The tool is developed and maintained by Kitware, Inc. \cite{kitware} as an open-source software. The main purpose of this tool is to provide native builds of cross-platform applications and to minimize the effort to maintain the project.
+To solve these problems the CMake \cite{cmake} tool was integrated into the project of EACirc along with some changes to the basic structure of EACirc. The CMake tool is developed and maintained by Kitware, Inc. \cite{kitware} as an open-source software. The main purpose of this tool is to provide native builds of cross-platform applications and to minimize the effort to maintain the project.
 
 Although there are many similar tools as CMake and some of them provides better features they are not so widely supported. For instance CMake generates project files for almost every common IDE and some of those IDEs comes with a built-in support for CMake.
 
@@ -79,7 +98,7 @@ Although there are many similar tools as CMake and some of them provides better 
 
 The CMake is actually a set of several tools that are taking care of building, testing, and deploying a user's \emph{C} or \emph{C++} project. These tools can be installed on Linux, Windows, or MacOSX. The CMake toolkit consists of the main tool \texttt{cmake} and the supportive \texttt{ccmake} (or \texttt{cmake-gui}), \texttt{ctest}, and \texttt{cpack}.
 
-The \texttt{cmake} tool takes a configuration file called \texttt{CMakeLists.txt} distributed with the project source files and generates the platform specific makefiles as an output. Then the user invokes a platform specific tool for building -- usually \texttt{make}, \texttt{ninja}, or \texttt{MSBuild}. If the process is successful the native binaries of the project are now made.
+The \texttt{cmake} tool takes a configuration file called \texttt{CMakeLists.txt} distributed with the project source files and generates the platform specific makefiles as an output. Then the user invokes a platform specific tool for building -- usually \texttt{make}, \texttt{ninja} \cite{ninja}, or \texttt{MSBuild}. \cite{msbuild} If the process is successful the native binaries of the project are now made.
 
 The \texttt{ctest} tool provides a simple platform for project testing. If the build is successful the user can run some custom made tests on the binaries.
 
@@ -89,7 +108,7 @@ The remaining \texttt{ccmake} and \texttt{cmake-gui} are just more convenient wa
 
 \section{A closer look at the \texttt{cmake} executable}
 
-The \texttt{cmake} executable is not just a dummy build-system. The process of generating a makefile is quite sophisticated. At First the user chooses the \emph{source directory} and the \emph{build directory}. Then (s)he invokes the \texttt{cmake} command in a \emph{build directory} with appropriate parameters. The subsequent process consists of several phases -- selection of a native build-system (in a CMake terminology referenced as a \emph{generator}), configuration based on a user-specific input, and the own generation of a makefile.\footnote{Note that the exact scheme of this process can differ according to which interface of CMake is used -- i.e. \texttt{cmake}, \texttt{ccmake}, or \texttt{cmake-gui}.}
+The \texttt{cmake} executable is not just a dummy build-system. The process of generating a makefile is quite sophisticated. At first the user chooses the \emph{source directory} and the \emph{build directory}. Then (s)he invokes the \texttt{cmake} command in a \emph{build directory} with appropriate parameters. The subsequent process consists of several phases -- selection of a native build-system (in a CMake terminology referenced as a \emph{generator}), configuration based on a user-specific input, and the own generation of a makefile.\footnote{Note that the exact scheme of this process can differ according to which interface of CMake is used -- i.e. \texttt{cmake}, \texttt{ccmake}, or \texttt{cmake-gui}.}
 
 The \emph{source directory} is simply a directory where the project sources are located and as well as the top-level \texttt{CMakeLists.txt} file which is distributed with the sources. The build directory is an empty user-created directory in which the user wants the binaries to be build.
 
@@ -134,21 +153,18 @@ The new build-system is written on the CMake platform. This platform allows to d
 
 \begin{description}
 	\item[\texttt{BUILD\_ONECLICK}] enables building of Oneclick, the supportive tool for EACirc.
-	
 	\item[\texttt{BUILD\_CAESAR}] enables building of the Caesar project.
-	
 	\item[\texttt{BUILD\_ESTREAM}] enables building of the Estream project.
-	
 	\item[\texttt{BUILD\_SHA3}] enables building of the SHA-3 project.
-	
 	\item[\texttt{BUID\_CUDA}] enables to build the support for CUDA devices. This option is available only if the CUDA Toolkit \cite{cuda_toolkit} is installed on the build machine\footnote{A build machine is a physical or a virtual machine that is used to build the project.} and found by the CMake.
 \end{description}
 
 \noindent
 Since the \emph{projects} are build into static libraries they must be linked to the \texttt{eacirc} executable at the compile time. This is done automatically when the option for the specific \emph{project} is enabled. In the figure \ref{fig:deps} are shown the dependencies of the all build targets.
 	\begin{figure}[H]
-	\centering
-	\includegraphics[width=.8\textwidth]{figures/deps}
+	\begin{center}
+		\includegraphics[width=.8\textwidth]{figures/deps}
+	\end{center}
 	\caption{EAcirc dependency graph}
 	\label{fig:deps}
 	\small
@@ -162,7 +178,7 @@ The usage of CMake and the new options of building EACirc are explained in detai
 
 \section{Project settings for CUDA}
 
-It is now much easier to set the project for CUDA support with CMake than with oridinaly makefiles. When the CUDA Toolkit \cite{cuda_toolkit} is installed and automatically found by CMake\footnote{If CUDA Toolkit is installed on the build machine but not found by CMake automatically then the path to CUDA Toolkit can be specified manually.} then the option \texttt{BUILD\_CUDA} becomes available. If this option is enabled then the \texttt{eacirc} executable is build using Nvidia \cite{nvidia} \texttt{nvcc} compiler and the C preprocessor macro \texttt{CUDA} is defined causing that the executable will be runnable on CUDA capable devices. When writing a code for CUDA the preprocessor macro \texttt{CUDA} can be queried.
+It is now much easier to set the project for CUDA support with CMake than with ordinal makefiles. When the CUDA Toolkit \cite{cuda_toolkit} is installed and automatically found by CMake\footnote{If CUDA Toolkit is installed on the build machine but not found by CMake automatically then the path to CUDA Toolkit can be specified manually.} then the option \texttt{BUILD\_CUDA} becomes available. If this option is enabled then the \texttt{eacirc} executable is build using Nvidia \cite{nvidia} \texttt{nvcc} compiler and the C preprocessor macro \texttt{CUDA} is defined causing that the executable will be runnable on CUDA capable devices. When writing a code for CUDA the preprocessor macro \texttt{CUDA} can be queried.
 
 \printbibliography[heading=bibintoc]
 \todo{Fix the autors of online resources}
