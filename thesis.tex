@@ -117,7 +117,7 @@ The figure \ref{fig:cpu_vs_gpu_arch} shows a high level view of the CPU and GPU 
 
 The performance of GPU is mainly measured by two variables: floating point operations per second (FLOPS) and memory bandwidth. The figure \ref{fig:cpu_vs_gpu_performance} shows the theoretical maximum performance on NVIDIA GPU's in contrast to Intel CPU's in terms of throughput.
 
-\section{Architecture of CUDA capable devices}
+\section{Hardware architecture}
 \label{cuda_architecture}
 
 In both, CPUs and GPUs, DRAM (fig. \ref{fig:cpu_vs_gpu_arch}) is significantly slower than ALU. If an ALU requires some data from DRAM, the ALU must wait hundreds of clock cycles to the data to became available (viz. latency). The waiting is highly ineffective and it is usually solved with executing another thread's instruction which has it's data available. The difference between CPU and GPU is how often is going to happened that an instruction wants data from DRAM.
