@@ -22,6 +22,7 @@
 \setminted{framesep=2mm, frame=lines}
 
 \usepackage{multicol}
+\usepackage{subcaption} 
 
 \usepackage{tikz}
 \usetikzlibrary{trees,calc,shapes.arrows}
@@ -81,7 +82,84 @@ Since the performance of GPGPU is dependable on used hardware the achieved speed
 To set the project of EACirc to use the CUDA technology required non-trivial intervention to settings for building the project from the sources aka the makefiles. This intervention would have resulted in a long-term unmaintainable and chaotic project if the previous workflow would have been preserved.  To prevent that the secondary objective of this thesis was to improve the previous build-system of the EACirc project using the open-source CMake \cite{cmake} supportive tool developed by Kitware \cite{kitware} corporation.
 
 
+
+
+
 \chapter{CUDA}
+As stated on the NVIDIA website \cite{about_cuda}, "CUDA is a parallel computing platform and programming model that enables dramatic increases in computing performance by harnessing the power of the graphics processing unit (GPU)." The strengths and weaknesses of GPU lies in it's architecture and in differences from CPU. A GPU that is able to execute CUDA programs is addressed as \emph{CUDA capable device} or simply as the \emph{device}.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics{figures/gpu-devotes-more-transistors-to-data-processing.png}
+	\caption{"The GPU Devotes More Transistors to Data Processing." NVIDA. \cite{cuda_guide}}
+	\label{fig:cpu_vs_gpu_arch}
+\end{figure}
+
+\noindent
+The figure \ref{fig:cpu_vs_gpu_arch} shows a high level view of the CPU and GPU architecture. In both there are the same parts: DRAM, Cache, Control, and ALU. DRAM and Cache are memory chips, the difference is that Cache is much more smaller but significantly faster. The Control unit is responsible mainly for instruction fetching, decoding, etc. ALU is simply a worker that processes the input data. CPU's Control unit and Cache is much more bigger and focuses on flow control and data caching in order to reduce the latency. The GPU's counterparts are simpler but multiplied allowing to focus on data processing (throughput) and data parallelism. It is worth mentioning that the DRAM of a GPU is significantly faster in order to supply enough data to the big number of ALUs and to keep them busy. \footnote{The memory model of GPU is described in section \ref{memory_hiearchy}.}
+
+\begin{figure}[H]
+	\centering
+	
+	\begin{subfigure}[b]{0.45\textwidth}
+		\includegraphics[width=\textwidth]{figures/memory-bandwidth.png}
+		\caption{"Memory Bandwidth for the CPU and GPU." NVIDIA. \cite{cuda_guide}}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.45\textwidth}
+		\includegraphics[width=\textwidth]{figures/floating-point-operations-per-second.png}
+		\caption{"Floating-Point Operations per Second for the CPU and GPU," NVIDIA. \cite{cuda_guide}}
+	\end{subfigure}
+	
+	\caption{The contrast of GPU and CPU performance in throughput}
+	\label{fig:cpu_vs_gpu_performance}
+\end{figure}
+
+The performance of GPU is mainly measured by two variables: floating point operations per second (FLOPS) and memory bandwidth. The figure \ref{fig:cpu_vs_gpu_performance} shows the theoretical maximum performance on NVIDIA GPU's in contrast to Intel CPU's in terms of throughput.
+
+\section{Architecture of CUDA capable devices}
+\label{cuda_architecture}
+
+In both, CPUs and GPUs, DRAM (fig. \ref{fig:cpu_vs_gpu_arch}) is significantly slower than ALU. If an ALU requires some data from DRAM, the ALU must wait hundreds of clock cycles to the data to became available (viz. latency). The waiting is highly ineffective and it is usually solved with executing another thread's instruction which has it's data available. The difference between CPU and GPU is how often is going to happened that an instruction wants data from DRAM.
+
+Today CPUs use SIMD (Single Instruction, Multiple Data) execution model. It processes a vector of data with only one instruction. The data are cached massively to reduce latency\footnote{Data caching is a technique to avoid waiting for data which are stored in a slow storage by introducing memory hierarchy. When data are requested, they are firstly searched for in faster memory. When they are not found (cache miss) then a slower memory is searched as long as they are found. Then they are promoted to the faster memory to become available to subsequent requests (cache hit).} and so the ALU does not need to wait. Thus, if big data are not accessed wrongly, the probability of cache miss is low and switching context to a different thread can be relatively expensive operation. 
+
+The execution model of CUDA is called SIMT (Single Instruction, Multiple Threads). Instead of vector of data, a vector of threads is executed with one instruction simultaneously. The vector of threads resides in one of the control units. Each thread of the execution vector is then mapped to an ALU related to the control unit. Each control unit has it's own cache. Since the cache is smaller, the cache miss is going to happen more often and another vector of threads, which has all its resources available, is executed. The switching of a thread context is done instantly with null overhead.\footnote{The section \ref{memory_hiearchy} describes how is this achieved.} Thus to keep the GPU busy, more threads than is the number of ALUs must be running.
+
+In CUDA terminology the control units are called \emph{Streaming Multiprocessors} (SMs). Each SM has it's own ALUs referred to as \emph{cores}. The single thread vector composes of 32 threads which is called a \emph{warp}.
+
+
+\section{Thread hierarchy}
+
+The SIMT architecture of GPU is well suited (and designed) for computational problems that can be optimized using data parallelism. Data parallelism is a parallelization technique that divides the input data to the independent parts and executing them separately (but evenly) on parallel computing nodes. The final result is then composed from each sub-result. CUDA platform supports this technique through kernels and thread hierarchy.
+
+In CUDA context a \emph{kernel} is a top-level function that is runnable on CUDA capable devices. It is recommended that the kernel should process only the smallest portion of input data that can be processed separately. For instance, when adding two vectors, the kernel should just add two corresponding scalars of the vector.
+
+For each kernel, that is being run, a separate thread is created on the device. As shown in the figure \ref{fig:grid}, a group of threads is forming a \emph{block} and a group of blocks is forming a \emph{grid}. Each thread has got unique ID dependant on it's position in the block and each block has unique ID dependant on it's position in the grid.\footnote{The grid might have up to 3 dimensions.}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics{figures/grid-of-thread-blocks.png}
+	\caption{"Grid of Thread Blocks." NVIDIA. \cite{cuda_guide}}
+	\label{fig:grid}
+\end{figure}
+
+\noindent
+The dimensions of the grid should correspond to the dimensions of the computational problem. In the example of adding vectors the grid should have same width as the number of scalars in the vector. Since each thread has a unique ID the kernel knows which scalars to and add what is the position of the result in the final vector.
+
+The execution of a single kernel is initiated as soon as the device has enough available resources to run a whole block. This constraint allows that the threads of one block can communicate with each other (viz. section \ref{memory_hiearchy}) and that the computational problem can be scaled across different types of CUDA GPUs disposing other hardware capabilities.\footnote{For instance the number of cores or available memory.} The execution order of the blocks is not defined.
+
+To fully utilize the device the size of the block should be multiple of a warp size\footnote{For current devices the warp size is 32 (viz. section \ref{cuda_architecture}).}. Each block is mapped to a single SM (viz. \ref{cuda_architecture}). On a single SM several blocks may be active, but the exact number is dependant on the GPU hardware parameters. Depending of the number of SMs several block may be run in parallel. This is fully done by the CUDA platform. but the programmer should know these constraints to produce optimized code for each device.
+
+\section{Memory hierarchy} \label{memory_hiearchy}
+
+
+
+\section{CUDA capabilities}
+\section{Toolkit}
+\section{Programming}
+
+
 
 
 
