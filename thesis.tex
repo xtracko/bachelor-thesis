@@ -19,7 +19,7 @@
 \addbibresource{thesis.bib}
 
 \usepackage{minted}
-\setminted{framesep=2mm, frame=lines}
+\setminted{frame=single, fontsize=\footnotesize}
 
 \usepackage{multicol}
 \usepackage{subcaption} 
@@ -147,17 +147,121 @@ For each kernel, that is being run, a separate thread is created on the device. 
 \noindent
 The dimensions of the grid should correspond to the dimensions of the computational problem. In the example of adding vectors the grid should have same width as the number of scalars in the vector. Since each thread has a unique ID the kernel knows which scalars to and add what is the position of the result in the final vector.
 
-The execution of a single kernel is initiated as soon as the device has enough available resources to run a whole block. This constraint allows that the threads of one block can communicate with each other (viz. section \ref{memory_hiearchy}) and that the computational problem can be scaled across different types of CUDA GPUs disposing other hardware capabilities.\footnote{For instance the number of cores or available memory.} The execution order of the blocks is not defined.
+The execution of a single kernel is initiated as soon as the device has enough available resources to run a whole block.\footnote{Threads of the same block are running concurrently.} This constraint allows that the threads of one block can communicate with each other (viz. section \ref{memory_hiearchy}) and that the computational problem can be scaled across different types of CUDA GPUs disposing other hardware capabilities.\footnote{For instance the number of cores or available memory.} The execution order of the blocks is not defined.
 
 To fully utilize the device the size of the block should be multiple of a warp size\footnote{For current devices the warp size is 32 (viz. section \ref{cuda_architecture}).}. Each block is mapped to a single SM (viz. \ref{cuda_architecture}). On a single SM several blocks may be active, but the exact number is dependant on the GPU hardware parameters. Depending of the number of SMs several block may be run in parallel. This is fully done by the CUDA platform. but the programmer should know these constraints to produce optimized code for each device.
 
-\section{Memory hierarchy} \label{memory_hiearchy}
+\section{Memory hierarchy}
+\label{memory_hiearchy}
+
+CUDA devices dispose with multi level memory model. Each level differs in size, speed, and accessibility. The main levels are \emph{global memory}, \emph{shared memory}, and a \emph{local memory}.\footnote{In heterogeneous programming the GPU global memory is denoted as subset of \emph{device memory} and CPU memory is denoted as \emph{host memory}. More on heterogeneous programming in section \ref{heterogeneous_programming}.} 
+
+The global memory is the slowest and the biggest. The data living in the global memory are accessible everywhere in the device. The access to the data is done via 32-, 64-, or 128-byte transactions. The access should fulfil several constraints to achieve maximum performance. One of these restrictions is a coalesced access.\footnote{The other constraints are not relevant for this thesis.} A coalesced access is done by that every thread in the block order reads or writes on the subsequent address simultaneously. The global memory should be mainly used for kernel's input/output data and the number of accesses should be minimal.
+
+The shared memory is fast. It resides in SM's cache. It is almost as fast as registers and hundreds of times faster than global memory. The data is accessible only by the threads of the same block. The number of running blocks on SM is mainly determined by the size of the shared memory required for a single block which should be know before the block starts executing. The address space of the memory is alternately divided into 32 (warp size) memory banks of size 32,- or 64-bytes. Again there are access restriction for maximum performance. Each thread of the warp should access to the different memory bank resulting into only one transaction. Otherwise the access fill be serialized to the number of transactions depending on the maximum number of accesses to one memory bank.\footnote{If multiple threads are requesting value from one address, the access will not be serialized but the value will be broadcast resulting only in one transaction.}
+
+The performance of local memory is almost the same as of shared memory. The data lives only for the lifespan of a thread and is accessible only by the owning thread. It is implemented thought registers of SM. No restrictions for maximum performance apply. The size of the local memory is also one of the main variables of how much blocks can be run simultaneously on a single SM.
+
+Besides global, shared and local levels of memory a \emph{constant memory} exists.\footnote{There is also a \emph{texture memory}, but it is irrelevant for this thesis.} It is special kind of a memory that is mend for constants and is implemented almost the same as a global memory. A single access to the memory is as slow as an access to the global memory. Since the data in this memory are constants, they can be massively cached and the subsequent reads are as fast as reads from shared memory. The lifespan of the data is same as of the global memory.
+
+\newpage
+
+\section{Heterogeneous programming}
+\label{heterogeneous_programming}
+
+A heterogeneous system is a system composed of more than one kind of a processor. The CUDA philosophy supposes that CUDA executes on a physically separate \emph{device} (GPU) that acts as a coprocessor to the program that is running on the \emph{host} (CPU). The state of the device and the host is stored in their own physically separate memory space referred to as the \emph{device memory} and the \emph{host memory}. Therefore the host program is in charge of the device resources and manages launching of kernels.
+
+To successfully launch a kernel the following scenario is most often used:
+\begin{enumerate}[noitemsep]
+	\item Host program allocates the space for the input and output data in the host memory.
+	\item Host program allocates the space for the input and output data in the device memory.
+	\item Host program populates the space for input data in the host memory.
+	\item Host program sends the input data to the device.
+	\item Host program configures and launches the kernel on the device.
+	\item Device program executes.
+	\item Host program copies the final results from the the device to the host.
+	\item Host program processes the results. 
+\end{enumerate}
+
+\noindent
+Since most of these actions are input/output operations, they may be performed either synchronously or asynchronously.\footnote{A synchronous operation does block the execution of the host program for the duration of the operation. An asynchronous operation does not block the execution of the host program. The host program is then notified if the asynchronous operation succeeded or failed.} The execution of the kernel on the device is always asynchronous.
+
+\section{Compute capabilities}
+
+Because producing optimized code for CUDA devices is closely linked to their hardware parameters and almost with every new product line of NVIDIA GPUs a new features are introduced, NVIDIA established a system for backward and a forward compatibility. The GPUs were divided to the classes reflecting the technical parameters and runtime features of CUDA platform. These classes are referred to as compute capabilities.\footnote{For full list of compute capabilities corresponding to the date of release of this thesis see \cite{cuda_guide} section G.~Compute~Capabilities}.
+
+\section{Programming language}
+
+The main programming languages for CUDA are \emph{C} and \emph{C++} that are enriched by several CUDA specific keywords. Because \emph{C++} is a high-level language some \emph{C++} features are not supported in the device code. The source code for the device and for the host may be mixed together and placed into one source file jointly.
 
 
+The listing \ref{listing:cuda_example} shows a sample CUDA code of vector addition on the device. The sample follows the scenario of launching the kernel as is described in section \ref{heterogeneous_programming}. 
 
-\section{CUDA capabilities}
-\section{Toolkit}
-\section{Programming}
+\begin{listing}[H]
+	\begin{minted}{cuda}
+	// kernel definition (the __global__ keyword declares that this is a kernel)
+	__global__ void vector_add_kernel( float* a, float* b, float* c )
+	{
+		// the id of this the thread in the block as alocal variable
+		int i = threadIdx.x;
+		
+		// add corresponding scalars of the vector
+		// store the result to c
+		// vectors a, b, and c are stored in the global memory
+		c[i] = a[i] + b[i];
+	}
+	
+	int main()
+	{
+		float* host_a, * host_b, * host_c;
+		float* device_a, * device_b, * device_c;
+	
+		// allocate vectors on the host
+		cudaMallocHost( &host_a, SIZE );
+		cudaMallocHost( &host_b, SIZE );
+		cudaMallocHost( &host_c, SIZE );
+		
+		// allocate vectors on the device
+		cudaMalloc( &device_a, SIZE );
+		cudaMalloc( &device_b, SIZE );
+		cudaMalloc( &device_c, SIZE );
+		
+		// copy input vectors from host to device
+		cudaMemcpy( device_a, host_a, size, cudaMemcpyHostToDevice );
+		cudaMemcpy( device_b, host_b, size, cudaMemcpyHostToDevice );
+		
+		// launch kernel with only 1 block of size SIZE
+		vector_add_kernel<<< 1, SIZE >>>( device_a, device_b, device_c );
+		
+		// retreive the result from device
+		// although the launching of the kernel is asynchronous this function 
+		// waits untill the execution of the kernel is not finished
+		cudaMemcpy( host_c, device_c, SIZE, cudaMemcpyDeviceToHost );
+		
+		// free memory on the device
+		cudaFree( device_a );
+		cudaFree( device_b );
+		cudaFree( device_c );
+		
+		// free memory on the host
+		cudaFreeHost( host_a );
+		cudaFreeHost( host_b );
+		cudaFreeHost( host_c );
+		
+		return 0;
+	}
+	\end{minted}
+	\caption{A sample program of vector addition on CUDA platform.}
+	\label{listing:cuda_example}
+\end{listing}
+
+\section{Tools}
+
+The source files of the CUDA programs must be compiled with a special compiler. The compiler that comes with the CUDA Toolkit is called \texttt{nvcc}. The compiler supports mixing the code for the host with the code for the device. The \texttt{nvcc} identify the code for the device and compiles it to the intermediate object file. The left over code for the host is then forwarded to the ordinary compiler for \emph{C/C++} like \texttt{gcc}, \texttt{clang}, or \texttt{cl}. The intermediate object files from the \texttt{nvcc} and the host compiler are then linked into the form of binary using ordinary linker or with \texttt{nvcc}. Therefore the formed binary includes both, the code for the host and for the device.
+
+The debugging of the device code is slightly different that debugging the code for the host. It requires a special debugger. The one that comes with CUDA Toolkit is called \texttt{cuda-gdb}. The interface of this tool is almost as similar as the interface of known Linux compiler \texttt{gdb}.
+
+The CUDA Toolkit also provides tools for kernel profiling and feature rich libraries for common computation problems on CUDA platform.
 
 
 
@@ -199,6 +303,8 @@ If the configuration is all right then the makefile is successfully created in t
 It is worth mentioning that the makefile automatically detects any changes made in the \emph{source directory}. So the user invokes the \texttt{cmake} executable just once to generate the makefile or to change the variable options of the build. The makefile also provides a way to install the application and/or to test it.
 
 The minimal and the most common sequence of commands to build and install a project on Linux using the CMake is as follows:
+
+\begin{listing}[H]
 	\begin{minted}[autogobble]{text}
 	mkdir <build_directory>
 	cd <build_directory>
@@ -206,6 +312,10 @@ The minimal and the most common sequence of commands to build and install a proj
 	make
 	make install
 	\end{minted}
+	\caption{The minimal CMake workflow.}
+\end{listing}
+
+\noindent
 Note that the \texttt{make} is chosen as a default generator. In addition the default project settings and configurations are applied. The binaries are installed to the platform specific location, i.g. on Linux it is \texttt{/usr/share/local}.
 
 \section{Changes made to the EACirc repository structure}
