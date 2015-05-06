@@ -1,0 +1,133 @@
+{
+  "title": "Urychlení nástroje EACirc pomocí GPU",
+  "id": 1,
+  "formatVersion": 2,
+  "ideas": {
+    "1": {
+      "title": "Úvod",
+      "id": 2,
+      "ideas": {
+        "2": {
+          "title": "EACirc",
+          "id": 6
+        },
+        "3": {
+          "title": "Paralelní architektury",
+          "id": 9,
+          "attr": {
+            "style": {}
+          }
+        },
+        "4": {
+          "title": "Paralelizovatelnost EACircu",
+          "id": 42
+        }
+      }
+    },
+    "11": {
+      "title": "CUDA",
+      "id": 4,
+      "ideas": {
+        "1": {
+          "title": "High level design",
+          "id": 8,
+          "ideas": {},
+          "attr": {
+            "style": {}
+          }
+        },
+        "6": {
+          "title": "Low level design",
+          "id": 18
+        },
+        "11": {
+          "title": "Komunikace CPU a GPU",
+          "id": 13,
+          "attr": {
+            "style": {}
+          }
+        },
+        "8.5": {
+          "title": "Profiling & Benchmarking",
+          "id": 20
+        },
+        "7.25": {
+          "title": "Debuging",
+          "id": 23
+        },
+        "6.625": {
+          "title": "Toolset",
+          "id": 25
+        }
+      }
+    },
+    "16": {
+      "title": "CMake",
+      "id": 26,
+      "ideas": {
+        "1": {
+          "title": "Nastavení projektu pro CUDA",
+          "id": 37,
+          "attr": {
+            "style": {}
+          }
+        },
+        "0.5": {
+          "title": "Refactoring projektu",
+          "id": 43,
+          "attr": {
+            "style": {}
+          }
+        },
+        "0.25": {
+          "title": "Filozofie",
+          "id": 44,
+          "attr": {
+            "style": {}
+          }
+        }
+      }
+    },
+    "21": {
+      "title": "Benchmarks",
+      "id": 11,
+      "ideas": {
+        "1": {
+          "title": "Hardware",
+          "id": 12
+        },
+        "2": {
+          "title": "Vstupní data",
+          "id": 14
+        },
+        "3": {
+          "title": "Výsledky",
+          "id": 15
+        }
+      }
+    },
+    "31": {
+      "title": "Závěr",
+      "id": 32
+    },
+    "18.5": {
+      "title": "Hradlový Obvod",
+      "id": 29,
+      "ideas": {
+        "1": {
+          "title": "Původní návrh",
+          "id": 33
+        },
+        "2": {
+          "title": "Změny návrhu",
+          "id": 36
+        },
+        "4": {
+          "title": "Implementace pro CUDA",
+          "id": 40
+        }
+      }
+    }
+  },
+  "links": []
+}
