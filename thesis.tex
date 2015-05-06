@@ -12,8 +12,8 @@
 
 \usepackage{enumitem}
 \usepackage{microtype}
-\usepackage[top=3.0cm, bottom=3.5cm, left=2.4cm, right=2.4cm]{geometry}	% pc version
-%\usepackage[top=3.0cm, bottom=3.5cm, left=2.9cm, right=1.9cm]{geometry}	% print version
+\usepackage[top=3.5cm, bottom=4cm, left=3cm, right=3cm]{geometry}	% pc version
+%\usepackage[top=3.5cm, bottom=4cm, left=3.5cm, right=2.5cm]{geometry}	% print version
 
 \usepackage[backend=biber,style=ieee]{biblatex}
 \addbibresource{thesis.bib}
@@ -26,6 +26,9 @@
 
 \usepackage{tikz}
 \usetikzlibrary{trees,calc,shapes.arrows}
+
+\widowpenalty10000
+\clubpenalty10000
 
 
 \thesislang{en}
@@ -67,26 +70,26 @@
 
 \MainMatter
 \chapter{Introduction}
-Random data and the concept of randomness are used in many branches of informatics. However one of the most fundamental usage of these principles is in cryptography and IT security. For instance let there be an communication among several entities. The main content of the communication is mend to stay hidden from the others, thus the communication needs to be encrypted by some chosen encryption protocol. The potential attacker \footnote{The one who wants to know the hidden content of the encrypted communication without permission of legal participants.} could intercept some encrypted messages and subject them to analysis. On the basis of certain traits of the protocol or similarities among individual messages the encryption could be broken and the hidden content of the communication could be read by the attacker. Thus the goal of encryption protocols is that the encrypted messages would not be similar or would not have some characteristic traits. In other words the encrypted messages must look like random data to the attacker. But these constraints are very difficult to provide.
+Random data and the concept of randomness are used in many branches of informatics. However one of the most fundamental use of these principles is in cryptography and IT security. For instance let there be an communication among several entities. The main content of the communication is meant to stay hidden from others entities, thus the communication needs to be encrypted by a chosen encryption protocol. The potential attacker\footnote{The one who wants to know the hidden content of the encrypted communication without permission of legal participants.} could intercept some encrypted messages and subject them to analysis. On the basis of certain traits of the protocol or similarities among individual messages the encryption could be broken and the hidden content of the communication could be read by the attacker. Thus the goal of encryption protocols is that the encrypted messages is not similar or does not have some characteristic traits. In other words, the encrypted messages must look like random data to the attacker. But these constraints are very difficult to provide.
 
-That is why have been created tools to test randomness and thus quality of ciphers. One of these tools is called EACirc and is developed at Faculty of Informatics at Masaryk University in CRoCS laboratory (Centre for Research on Cryptography and Security). It can tell how much are the input data close to a referential random data. \footnote{This is only an approximative explanation. The exact definition and meaning of EACirc results are described in Martin Ukrop's thesis Usage of evolvable circuit for statistical testing of randomness. \cite{ukrop_thesis}} To achieve that it uses raw computation power. But the computations made are not run in parallel and doing that could significantly speed-up the whole process. Faster evaluation could advance capabilities of EACirc and help it to test the randomness in much more detail.
+That is why tools have been created to test randomness and thus quality of ciphers. One of these tools is called EACirc and is developed at the Faculty of Informatics of Masaryk University in CRoCS laboratory (Centre for Research on Cryptography and Security). It can tell how much the input data are close to a referential random data.\footnote{This is only an approximative explanation. The exact definition and meaning of EACirc results are described in Martin Ukrop's thesis Usage of evolvable circuit for statistical testing of randomness~\cite{ukrop_thesis} since the accurate understanding of EACirc tool is not relevant for this thesis.} To achieve this EACirc uses raw computation power. However the computations are not run in parallel. If it was the case the whole process would be significantly speeded-up. Faster evaluation could advance capabilities of EACirc and help to test the randomness in much more detail. Speeding-up the EACirc is the primary objective of this thesis.
 
-The speed-up of EACirc is achieved with running some chosen computations on a GPU. The GPU must have got a build-in support of a general purpose programming (GPGPU). Such chip can perform not only algorithms used in rendering of computer graphic but also almost every other algorithm that is runnable on a CPU. The main difference against CPU is that the CPU is optimized to minimize latency whereas GPU is optimized to maximize throughput. Latency is a number meaning how much time is going to take a single instruction to load needed data and to execute the instruction. On the other hand throughput is a number meaning how much data the instruction can process per one time unit. \footnote{In current common computation model it is almost impossible to reduce latency together with the growth of throughput on a one device. The more data we load the longer time it takes.} Since some parts of EACirc processes a lot of data with algorithms, which does not need to be optimized for latency \footnote{An algorithm that needs to be optimized for latency in order to maximize performance is that one that has lots of edges in it's control flow graph.}, the usage of GPU's is suitable.
+The speed-up of EACirc is achieved with running some chosen computations on a GPU. The GPU must have got a build-in support of a general purpose programming (GPGPU). Such chip can perform not only algorithms used in rendering of computer graphics but also almost every other algorithm that is runnable on a CPU. The main difference against CPU is that the CPU is optimized to minimize latency whereas GPU is optimized to maximize throughput. Latency is a time that is needed to start and finish the execution of a single instruction including time ro load necessary data. On the other hand, throughput\label{throughput} is a number meaning how much instructions can be processed per one time unit.~\cite[p.~7]{professional_cuda} Since some parts of EACirc processes a lot of data with algorithms, which does not need to be optimized for latency\footnote{An algorithm that needs to be optimized for latency in order to maximize performance is that one which has lots of edges in it's control flow graph.}, the use of GPU's is suitable.
 
-Because GPGPU programming needs a specially enhanced hardware from the manufacturer there are several different solutions on the market. The solution that is used for this thesis is called CUDA \cite{about_cuda} and it's a proprietary technology developed by NVIDIA. \cite{nvidia} The decision to use CUDA was made by my advisor.
+Because GPGPU programming needs a specially enhanced hardware from the manufacturer several different solutions exist on the market which can be used. The solution used for this thesis is called CUDA~\cite{about_cuda} which is a proprietary technology developed by NVIDIA.~\cite{nvidia} The decision to use CUDA was made by my advisor.
 
-Since the performance of GPGPU is dependable on used hardware the achieved speed-up was measured by an experimental method. The benchmarks took place particularly on machines that laboratory of CRoCS is using for own computations and are capable to run a CUDA code.
+Since the performance of GPGPU is dependable on used hardware the achieved speed-up was measured by an experimental method. The benchmarks took place particularly on machines which are used at laboratory CRoCS for their own computations and which are capable to run a CUDA programs.
 
 \medskip
 
-To set the project of EACirc to use the CUDA technology required non-trivial intervention to settings for building the project from the sources aka the makefiles. This intervention would have resulted in a long-term unmaintainable and chaotic project if the previous workflow would have been preserved.  To prevent that the secondary objective of this thesis was to improve the previous build-system of the EACirc project using the open-source CMake \cite{cmake} supportive tool developed by Kitware \cite{kitware} corporation.
+To set the EACirc project to use the CUDA technology required non-trivial intervention into settings for building the project from the sources, i.e. into the makefiles. This intervention would have resulted in a long-term unmaintainable and chaotic project if the previous workflow was preserved. To prevent this the secondary objective of this thesis is to improve the previous build-system of the EACirc project b\ using the open-source CMake~\cite{cmake} supportive tool which was developed by Kitware corporation~\cite{kitware}.
 
 
 
 
 
 \chapter{CUDA}
-As stated on the NVIDIA website \cite{about_cuda}, "CUDA is a parallel computing platform and programming model that enables dramatic increases in computing performance by harnessing the power of the graphics processing unit (GPU)." The strengths and weaknesses of GPU lies in it's architecture and in differences from CPU. A GPU that is able to execute CUDA programs is addressed as \emph{CUDA capable device} or simply as the \emph{device}.
+As stated on the NVIDIA website \cite{about_cuda}, "CUDA is a parallel computing platform and programming model that enables dramatic increases in computing performance by harnessing the power of the graphics processing unit (GPU)." The strengths and weaknesses of GPU lie in it's architecture and in differences from CPU. A GPU that is able to execute CUDA programs is addressed as \emph{CUDA capable device} or simply as the \emph{device}.
 
 \begin{figure}[H]
 	\centering
@@ -96,117 +99,114 @@ As stated on the NVIDIA website \cite{about_cuda}, "CUDA is a parallel computing
 \end{figure}
 
 \noindent
-The figure \ref{fig:cpu_vs_gpu_arch} shows a high level view of the CPU and GPU architecture. In both there are the same parts: DRAM, Cache, Control, and ALU. DRAM and Cache are memory chips, the difference is that Cache is much more smaller but significantly faster. The Control unit is responsible mainly for instruction fetching, decoding, etc. ALU is simply a worker that processes the input data. CPU's Control unit and Cache is much more bigger and focuses on flow control and data caching in order to reduce the latency. The GPU's counterparts are simpler but multiplied allowing to focus on data processing (throughput) and data parallelism. It is worth mentioning that the DRAM of a GPU is significantly faster in order to supply enough data to the big number of ALUs and to keep them busy. \footnote{The memory model of GPU is described in section \ref{memory_hiearchy}.}
+The figure~\ref{fig:cpu_vs_gpu_arch} shows a high level view of the CPU and GPU architecture. They both contain the same parts: DRAM, Cache, Control, and ALU. DRAM and Cache are memory chips, the difference is that Cache is much smaller but significantly faster. The Control unit is responsible mainly for instruction fetching, decoding, etc. ALU is simply a worker that processes the input data. CPU's Control unit and Cache is much bigger and focuses on flow control and data caching in order to reduce the latency. The GPU's counterparts are simpler but multiplied which allows to focus on data processing (throughput) and data parallelism. It is worth mentioning that the DRAM of a GPU is significantly faster in order to supply enough data to the big number of ALUs and to keep them busy.\footnote{The memory model of GPU is described in section~\ref{memory_hiearchy}.}
+
+The performance of GPU is mainly measured by two variables: throughput and memory bandwidth. Since GPU is mainly used to compute with real numbers throughput\footnote{For definition of throughput see section~\ref{throughput}.} is expressed in units of floating-point operations per second (FLOPS).\footnote{Floating-point operation is an operation on floating-point numbers which in informatics represents real numbers according to the international standard IEEE 754.} Memory bandwidth is the amount of data that can be processed per unit of time which is expressed in units of bytes per second (Bps).~\cite{professional_cuda} The figures~\ref{fig:gpu_throughput} and~\ref{fig:gpu_bandwith} show the theoretical maximum performance achievable on NVIDIA GPU's in contrast to Intel CPU's in terms of throughput and bandwidth.
 
 \begin{figure}[H]
 	\centering
-	
-	\begin{subfigure}[b]{0.45\textwidth}
-		\includegraphics[width=\textwidth]{figures/memory-bandwidth.png}
-		\caption{"Memory Bandwidth for the CPU and GPU." NVIDIA. \cite{cuda_guide}}
-	\end{subfigure}
-	\hfill
-	\begin{subfigure}[b]{0.45\textwidth}
-		\includegraphics[width=\textwidth]{figures/floating-point-operations-per-second.png}
-		\caption{"Floating-Point Operations per Second for the CPU and GPU," NVIDIA. \cite{cuda_guide}}
-	\end{subfigure}
-	
-	\caption{The contrast of GPU and CPU performance in throughput}
-	\label{fig:cpu_vs_gpu_performance}
+	\includegraphics[width=0.7\textwidth]{figures/floating-point-operations-per-second.png}
+	\caption{GPU vs CPU theoretical throughput. "Floating-Point Operations per Second for the CPU and GPU," NVIDIA.~\cite{cuda_guide}}
+	\label{fig:gpu_throughput}
 \end{figure}
 
-The performance of GPU is mainly measured by two variables: floating point operations per second (FLOPS) and memory bandwidth. The figure \ref{fig:cpu_vs_gpu_performance} shows the theoretical maximum performance on NVIDIA GPU's in contrast to Intel CPU's in terms of throughput.
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.7\textwidth]{figures/memory-bandwidth.png}
+	\caption{GPU vs CPU theoretical bandwidth. "Memory Bandwidth for the CPU and GPU." NVIDIA.~\cite{cuda_guide}}
+	\label{fig:gpu_bandwith}
+\end{figure}
 
 \section{Hardware architecture}
 \label{cuda_architecture}
 
-In both, CPUs and GPUs, DRAM (fig. \ref{fig:cpu_vs_gpu_arch}) is significantly slower than ALU. If an ALU requires some data from DRAM, the ALU must wait hundreds of clock cycles to the data to became available (viz. latency). The waiting is highly ineffective and it is usually solved with executing another thread's instruction which has it's data available. The difference between CPU and GPU is how often is going to happened that an instruction wants data from DRAM.
+In both, CPUs and GPUs, DRAM (figure \ref{fig:cpu_vs_gpu_arch}) is significantly slower than ALU. If an ALU requires some data from DRAM, the ALU must wait hundreds of clock cycles for the data to became available (see latency). The waiting is highly ineffective and it is usually solved with some technique for latency-hiding. One of these techniques is executing another thread's instruction which has its data available. The difference between CPU and GPU is how often happens that an instruction wants data from DRAM.
 
-Today CPUs use SIMD (Single Instruction, Multiple Data) execution model. It processes a vector of data with only one instruction. The data are cached massively to reduce latency\footnote{Data caching is a technique to avoid waiting for data which are stored in a slow storage by introducing memory hierarchy. When data are requested, they are firstly searched for in faster memory. When they are not found (cache miss) then a slower memory is searched as long as they are found. Then they are promoted to the faster memory to become available to subsequent requests (cache hit).} and so the ALU does not need to wait. Thus, if big data are not accessed wrongly, the probability of cache miss is low and switching context to a different thread can be relatively expensive operation. 
+Current CPUs use SIMD (Single Instruction, Multiple Data) execution model.~\cite{professional_cuda} It processes a vector of data with only one instruction. The data in CPU are cached massively to reduce latency\footnote{Data caching is a technique to avoid waiting for data which are stored in a slow storage by introducing memory hierarchy. When data are requested they are firstly searched for in faster memory. When they are not found (cache miss) then a slower memory is searched as long as they are found. Then they are promoted to the faster memory to become available to subsequent requests (cache hit). The data stored in cache which were not accessed for a long time are replaced with a new ones.} and so the ALU does not need to wait. Thus, if big data are not accessed in a wrong way the probability of cache miss is low and switching context to a different thread can be relatively expensive operation.
 
-The execution model of CUDA is called SIMT (Single Instruction, Multiple Threads). Instead of vector of data, a vector of threads is executed with one instruction simultaneously. The vector of threads resides in one of the control units. Each thread of the execution vector is then mapped to an ALU related to the control unit. Each control unit has it's own cache. Since the cache is smaller, the cache miss is going to happen more often and another vector of threads, which has all its resources available, is executed. The switching of a thread context is done instantly with null overhead.\footnote{The section \ref{memory_hiearchy} describes how is this achieved.} Thus to keep the GPU busy, more threads than is the number of ALUs must be running.
+The execution model of CUDA is called SIMT (Single Instruction, Multiple Threads).~\cite{professional_cuda} Instead of vector of data, a \emph{vector of threads} is executed with one instruction simultaneously. The vector of threads resides in one of the control units. Each thread of the execution vector is then mapped to an ALU related to the control unit. Each control unit has it's own cache. Since the cache is smaller, the cache miss is going to happen more often and another vector of threads, which has all its resources available, is executed. The switching of a thread context is done instantly with null overhead.\footnote{The section~\ref{memory_hiearchy} describes how is this achieved.} Therefore to keep the GPU busy, more threads than is the number of ALUs must be running.
 
-In CUDA terminology the control units are called \emph{Streaming Multiprocessors} (SMs). Each SM has it's own ALUs referred to as \emph{cores}. The single thread vector composes of 32 threads which is called a \emph{warp}.
+In CUDA terminology the control units are called \emph{Streaming Multiprocessors} (SMs). Each SM has it's own ALUs referred to as \emph{cores}. The single thread vector composes of 32 threads which is called a \emph{warp}. From the SIMT architecture imply that all threads of the warp are performing the same instruction simultaneously at the same time.~\cite{cuda_guide}
 
 
 \section{Thread hierarchy}
 
-The SIMT architecture of GPU is well suited (and designed) for computational problems that can be optimized using data parallelism. Data parallelism is a parallelization technique that divides the input data to the independent parts and executing them separately (but evenly) on parallel computing nodes. The final result is then composed from each sub-result. CUDA platform supports this technique through kernels and thread hierarchy.
+The SIMT architecture of GPU is well suited and designed for computational problems that can be optimized using data parallelism.~\cite{professional_cuda} Data parallelism is a parallelization technique that divides the input data to the independent parts and executes them separately (but evenly) on parallel computing nodes. The final result is then composed from each sub-result.~\cite{data_parallel_algorithms} CUDA platform supports this technique through kernels and thread hierarchy.
 
-In CUDA context a \emph{kernel} is a top-level function that is runnable on CUDA capable devices. It is recommended that the kernel should process only the smallest portion of input data that can be processed separately. For instance, when adding two vectors, the kernel should just add two corresponding scalars of the vector.
+In CUDA context a \emph{kernel} is a top-level function that is runnable on CUDA capable devices.~\cite{cuda_guide} It is recommended that the kernel processes only the smallest portion of input data that can be processed separately.~\cite{data_parallel_algorithms} For instance, when adding two vectors the kernel should just add two corresponding scalars of the vector.
 
-For each kernel, that is being run, a separate thread is created on the device. As shown in the figure \ref{fig:grid}, a group of threads is forming a \emph{block} and a group of blocks is forming a \emph{grid}. Each thread has got unique ID dependant on it's position in the block and each block has unique ID dependant on it's position in the grid.\footnote{The grid might have up to 3 dimensions.}
+For each kernel that is being run a separate lightweight thread is created on the device. As shown in figure \ref{fig:grid} a group of threads is forming a \emph{block} and a group of blocks is forming a \emph{grid}. Each thread has got unique ID dependant on it's position in the block and each block has unique ID dependant on it's position in the grid.\footnote{The grid might have up to 3 dimensions.~\cite{cuda_guide}}
 
 \begin{figure}[H]
 	\centering
-	\includegraphics{figures/grid-of-thread-blocks.png}
+	\includegraphics[scale=0.9]{figures/grid-of-thread-blocks.png}
 	\caption{"Grid of Thread Blocks." NVIDIA. \cite{cuda_guide}}
 	\label{fig:grid}
 \end{figure}
 
 \noindent
-The dimensions of the grid should correspond to the dimensions of the computational problem. In the example of adding vectors the grid should have same width as the number of scalars in the vector. Since each thread has a unique ID the kernel knows which scalars to and add what is the position of the result in the final vector.
+The dimensions of the grid should correspond to the dimensions of the computational problem. In the example of adding vectors the grid should have the same width as the number of scalars in the vector. Since each thread has a unique ID the kernel knows which scalars to add and what is the position of the result in the final vector.
 
-The execution of a single kernel is initiated as soon as the device has enough available resources to run a whole block.\footnote{Threads of the same block are running concurrently.} This constraint allows that the threads of one block can communicate with each other (viz. section \ref{memory_hiearchy}) and that the computational problem can be scaled across different types of CUDA GPUs disposing other hardware capabilities.\footnote{For instance the number of cores or available memory.} The execution order of the blocks is not defined.
+The execution of a single kernel is initiated as soon as the device has enough available resources to run a whole block.\footnote{Threads of the same block are running concurrently.}~\cite{cuda_guide} This constraint allows that the threads of one block can communicate with each other (see section \ref{memory_hiearchy}) and that the computational problem can be scaled across different types of CUDA GPUs that disposes with other hardware capabilities.\footnote{For instance the number of cores or available memory.}~\footnote{Any program scales if and only if a similar performance is achieved for arbitrary size of input data or across different hardware.~\cite{cuda_best_practices} It is recommended that any well optimized program for CUDA scales.} The execution order of the blocks is not defined.
 
-To fully utilize the device the size of the block should be multiple of a warp size\footnote{For current devices the warp size is 32 (viz. section \ref{cuda_architecture}).}. Each block is mapped to a single SM (viz. \ref{cuda_architecture}). On a single SM several blocks may be active, but the exact number is dependant on the GPU hardware parameters. Depending of the number of SMs several block may be run in parallel. This is fully done by the CUDA platform. but the programmer should know these constraints to produce optimized code for each device.
+To fully utilize the device the size of the block should be multiple of a warp size\footnote{For current devices the warp size is 32 (see. section~\ref{cuda_architecture}).}. Each block is mapped to a single SM.\footnote{For definition of Streaming multiprocessor (SM) see~\ref{cuda_architecture}} On a single SM several blocks may be active but the exact number is dependant on the GPU hardware parameters. Depending of the number of SMs several block may be run in parallel. This is fully done automatically by the CUDA platform. However, the programmer should know these constraints to produce optimized code for each device.\footnote{For various optimization techniques for CUDA platform see~\cite{cuda_best_practices}}
 
 \section{Memory hierarchy}
 \label{memory_hiearchy}
 
-CUDA devices dispose with multi level memory model. Each level differs in size, speed, and accessibility. The main levels are \emph{global memory}, \emph{shared memory}, and a \emph{local memory}.\footnote{In heterogeneous programming the GPU global memory is denoted as subset of \emph{device memory} and CPU memory is denoted as \emph{host memory}. More on heterogeneous programming in section \ref{heterogeneous_programming}.} 
+CUDA devices dispose with multi level memory model. Each level differs in size, speed, and accessibility. The main levels are \emph{global memory}, \emph{shared memory}, and \emph{local memory}.\footnote{In heterogeneous programming the GPU global memory is denoted as subset of \emph{device memory} and CPU memory is denoted as \emph{host memory}. More about heterogeneous programming is in section~\ref{heterogeneous_programming}.}~\cite{cuda_guide}
 
-The global memory is the slowest and the biggest. The data living in the global memory are accessible everywhere in the device. The access to the data is done via 32-, 64-, or 128-byte transactions. The access should fulfil several constraints to achieve maximum performance. One of these restrictions is a coalesced access.\footnote{The other constraints are not relevant for this thesis.} A coalesced access is done by that every thread in the block order reads or writes on the subsequent address simultaneously. The global memory should be mainly used for kernel's input/output data and the number of accesses should be minimal.
+The global memory is the slowest and the biggest. The data living in the global memory are accessible everywhere in the device. The access to the data is done via 32-, 64-, or 128-byte transactions. The access should fulfil several constraints to achieve maximum performance. One of these restrictions is a coalesced access.\footnote{Other constraints are not relevant for this thesis.} The coalesced access appears if every thread in the block order reads or writes on the subsequent address simultaneously. The global memory should be mainly used for kernel's input/output data and the number of accesses should be minimal.
 
-The shared memory is fast. It resides in SM's cache. It is almost as fast as registers and hundreds of times faster than global memory. The data is accessible only by the threads of the same block. The number of running blocks on SM is mainly determined by the size of the shared memory required for a single block which should be know before the block starts executing. The address space of the memory is alternately divided into 32 (warp size) memory banks of size 32,- or 64-bytes. Again there are access restriction for maximum performance. Each thread of the warp should access to the different memory bank resulting into only one transaction. Otherwise the access fill be serialized to the number of transactions depending on the maximum number of accesses to one memory bank.\footnote{If multiple threads are requesting value from one address, the access will not be serialized but the value will be broadcast resulting only in one transaction.}
+The shared memory is fast. It is almost as fast as registers and hundreds of times faster than the global memory. It resides in Streaming Multiprocessor's (SM) cache. The data are accessible only by threads of the same block. The number of running blocks on SM is mainly determined by the size of the shared memory required for a single block which should be known before the block starts executing. Again there are access restriction for maximum performance. The address space of the memory is alternately divided into 32 (warp size) memory banks of size 32,- or 64-bytes. Each thread of the warp should access to the different memory bank resulting into only one transaction. Otherwise the access will be serialized to the number of transactions depending on the maximum number of accesses to one memory bank.\footnote{If multiple threads are requesting value from one address the access will not be serialized but the value will be broadcast resulting only in one transaction.}
 
-The performance of local memory is almost the same as of shared memory. The data lives only for the lifespan of a thread and is accessible only by the owning thread. It is implemented thought registers of SM. No restrictions for maximum performance apply. The size of the local memory is also one of the main variables of how much blocks can be run simultaneously on a single SM.
+The performance of the local memory is almost the same as of the global memory which is slow. The data lives only for the lifespan of a thread and is accessible only by the owning thread. The local memory is only used in a few scenarios described in CUDA C Programming guide~\cite{cuda_guide} in section Device Memory Accesses.
 
-Besides global, shared and local levels of memory a \emph{constant memory} exists.\footnote{There is also a \emph{texture memory}, but it is irrelevant for this thesis.} It is special kind of a memory that is mend for constants and is implemented almost the same as a global memory. A single access to the memory is as slow as an access to the global memory. Since the data in this memory are constants, they can be massively cached and the subsequent reads are as fast as reads from shared memory. The lifespan of the data is same as of the global memory.
+Besides global, shared and local levels of memory a \emph{constant memory} exists.\footnote{There is also a \emph{texture memory} but the its description is irrelevant for this thesis. For more informations see~\cite{cuda_guide}}~\cite{cuda_guide} It is a special kind of memory that is meant for constants and is implemented in almost the same way as the global memory. A single access to the constant memory is as slow as an access to the global memory. Since the data in this memory are constants (read-only values) they can be massively cached and the subsequent readings are as fast as readings from shared memory. Lifespan of the data living in the constant memory is the same as of the data living in the global memory.
 
-\newpage
+Every other suitable variable of the scope of a kernel is placed into register. Registers are very fast. The number of registers for each Streaming Multiprocessor~(SM) is large so that each SM may have a lot of active threads and to switch their context easily.\footnote{See SIMT architecture and switching of thread context in section~\ref{cuda_architecture}.} The number of active blocks and threads is determined by the count of used registers by one kernel.
 
 \section{Heterogeneous programming}
 \label{heterogeneous_programming}
 
-A heterogeneous system is a system composed of more than one kind of a processor. The CUDA philosophy supposes that CUDA executes on a physically separate \emph{device} (GPU) that acts as a coprocessor to the program that is running on the \emph{host} (CPU). The state of the device and the host is stored in their own physically separate memory space referred to as the \emph{device memory} and the \emph{host memory}. Therefore the host program is in charge of the device resources and manages launching of kernels.
+A heterogeneous system is a system composed of more than one kind of a processor.~\cite{professional_cuda} The CUDA philosophy supposes that CUDA executes on a physically separate \emph{device} (GPU) that acts as a coprocessor to the program that is running on the \emph{host} (CPU). The state of the device and the host is stored in their own physically separate memory space referred to as the \emph{device memory} and the \emph{host memory}. Therefore the host program is in charge of the device resources and manages launching of kernels.~\cite{cuda_guide}
 
-To successfully launch a kernel the following scenario is most often used:
+The most often used scenario of kernel launch including device and host resource management is as follows:
 \begin{enumerate}[noitemsep]
 	\item Host program allocates the space for the input and output data in the host memory.
 	\item Host program allocates the space for the input and output data in the device memory.
 	\item Host program populates the space for input data in the host memory.
 	\item Host program sends the input data to the device.
 	\item Host program configures and launches the kernel on the device.
-	\item Device program executes.
+	\item Device program is executed.
 	\item Host program copies the final results from the the device to the host.
 	\item Host program processes the results. 
 \end{enumerate}
 
 \noindent
-Since most of these actions are input/output operations, they may be performed either synchronously or asynchronously.\footnote{A synchronous operation does block the execution of the host program for the duration of the operation. An asynchronous operation does not block the execution of the host program. The host program is then notified if the asynchronous operation succeeded or failed.} The execution of the kernel on the device is always asynchronous.
+Since most of these actions are input/output operations, they may be performed either synchronously or asynchronously.\footnote{A synchronous operation blocks execution of the host program for the duration of the operation. An asynchronous operation does not block the execution of the host program and the incoming/outgoing transmission can be overlapped with computation. The host program is then notified whether the asynchronous operation succeeded or failed.~\cite{async_io}} The execution of the kernel on the device is always asynchronous.~\cite{cuda_guide}
 
 \section{Compute capabilities}
 
-Because producing optimized code for CUDA devices is closely linked to their hardware parameters and almost with every new product line of NVIDIA GPUs a new features are introduced, NVIDIA established a system for backward and a forward compatibility. The GPUs were divided to the classes reflecting the technical parameters and runtime features of CUDA platform. These classes are referred to as compute capabilities.\footnote{For full list of compute capabilities corresponding to the date of release of this thesis see \cite{cuda_guide} section G.~Compute~Capabilities}.
+As producing an optimized code for CUDA devices is closely linked to their hardware parameters~\cite{cuda_best_practices} and almost with every new product line of NVIDIA GPUs a new features are introduced, NVIDIA established a system for backward and a forward compatibility. The GPUs were divided to the classes reflecting the technical parameters and runtime features of CUDA platform. These classes are referred to as compute capabilities.\footnote{For full list of compute capabilities corresponding to the date of release of this thesis see CUDA~C~Programming~Guide \cite{cuda_guide} section G.~Compute~Capabilities}.
 
 \section{Programming language}
 
-The main programming languages for CUDA are \emph{C} and \emph{C++} that are enriched by several CUDA specific keywords. Because \emph{C++} is a high-level language some \emph{C++} features are not supported in the device code. The source code for the device and for the host may be mixed together and placed into one source file jointly.
+The main programming languages for CUDA are \emph{C} and \emph{C++} which are enriched by several CUDA specific keywords. Since \emph{C++} is a high-level language some \emph{C++} features are not supported in the device code. The source code for the device and for the host may be mixed together and placed into one source file jointly.~\cite{cuda_guide}
 
+The listing \ref{listing:cuda_example} shows a sample CUDA code of vector addition on the device. The sample follows the scenario of launching the kernel as described in section \ref{heterogeneous_programming}.
 
-The listing \ref{listing:cuda_example} shows a sample CUDA code of vector addition on the device. The sample follows the scenario of launching the kernel as is described in section \ref{heterogeneous_programming}. 
+However one caution should be remembered before porting an algorithm to the CUDA platform. If an algorithm contains an \emph{if-then-else} statement and any thread of the warp evaluates the condition differently then the different execution paths will be serialized. The execution paths will merge after every thread of the warp executes its execution path. Fortunately some techniques exists to avoid this artefact. This principle also applies on other language control flow constructs as loops, goto statements, and etc.~\cite{cuda_guide}
 
-\begin{listing}[H]
-	\begin{minted}{cuda}
-	// kernel definition (the __global__ keyword declares that this is a kernel)
+\begin{listing}[h]
+	\begin{minted}[autogobble, linenos, frame=single, xleftmargin=2em]{cuda}
+	// kernel definition (the __global__ keyword declares the kernel)
 	__global__ void vector_add_kernel( float* a, float* b, float* c )
 	{
-		// the id of this the thread in the block as alocal variable
+		// the id of this thread in the block as a local variable
 		int i = threadIdx.x;
 		
-		// add corresponding scalars of the vector
-		// store the result to c
+		// add corresponding scalars of the vector and store the result
 		// vectors a, b, and c are stored in the global memory
 		c[i] = a[i] + b[i];
 	}
@@ -217,24 +217,25 @@ The listing \ref{listing:cuda_example} shows a sample CUDA code of vector additi
 		float* device_a, * device_b, * device_c;
 	
 		// allocate vectors on the host
-		cudaMallocHost( &host_a, SIZE );
-		cudaMallocHost( &host_b, SIZE );
-		cudaMallocHost( &host_c, SIZE );
+		cudaMallocHost( &host_a, SIZE * sizeof( float ) );
+		cudaMallocHost( &host_b, SIZE * sizeof( float ) );
+		cudaMallocHost( &host_c, SIZE * sizeof( float ) );
 		
 		// allocate vectors on the device
-		cudaMalloc( &device_a, SIZE );
-		cudaMalloc( &device_b, SIZE );
-		cudaMalloc( &device_c, SIZE );
+		cudaMalloc( &device_a, SIZE * sizeof( float ) );
+		cudaMalloc( &device_b, SIZE * sizeof( float ) );
+		cudaMalloc( &device_c, SIZE * sizeof( float ) );
 		
 		// copy input vectors from host to device
 		cudaMemcpy( device_a, host_a, size, cudaMemcpyHostToDevice );
 		cudaMemcpy( device_b, host_b, size, cudaMemcpyHostToDevice );
 		
 		// launch kernel with only 1 block of size SIZE
+		// a special CUDA syntax is used
 		vector_add_kernel<<< 1, SIZE >>>( device_a, device_b, device_c );
 		
-		// retreive the result from device
-		// although the launching of the kernel is asynchronous this function 
+		// retrieve the result from device
+		// although the launch of the kernel is asynchronous this function 
 		// waits untill the execution of the kernel is not finished
 		cudaMemcpy( host_c, device_c, SIZE, cudaMemcpyDeviceToHost );
 		
@@ -257,11 +258,11 @@ The listing \ref{listing:cuda_example} shows a sample CUDA code of vector additi
 
 \section{Tools}
 
-The source files of the CUDA programs must be compiled with a special compiler. The compiler that comes with the CUDA Toolkit is called \texttt{nvcc}. The compiler supports mixing the code for the host with the code for the device. The \texttt{nvcc} identify the code for the device and compiles it to the intermediate object file. The left over code for the host is then forwarded to the ordinary compiler for \emph{C/C++} like \texttt{gcc}, \texttt{clang}, or \texttt{cl}. The intermediate object files from the \texttt{nvcc} and the host compiler are then linked into the form of binary using ordinary linker or with \texttt{nvcc}. Therefore the formed binary includes both, the code for the host and for the device.
+NVIDIA provide the necessary tools for developing on CUDA platform through CUDA Toolkit package. The source files of the CUDA programs must be compiled by a special compiler. The compiler that comes with the CUDA Toolkit is called \texttt{nvcc}.~\cite{cuda_compiler} The compiler supports mixing the code for the host with the code for the device. The \texttt{nvcc} identifies the code for the device and compiles it to the intermediate object file. The remaining code for the host is then forwarded to the ordinary compiler for \emph{C/C++} like \texttt{gcc}, \texttt{clang}, or \texttt{cl}. The object files from the \texttt{nvcc} and the host compiler are then linked into the form of binary using ordinary linker or by \texttt{nvcc}. Therefore, the formed binary includes both the code for the host and for the device.
 
-The debugging of the device code is slightly different that debugging the code for the host. It requires a special debugger. The one that comes with CUDA Toolkit is called \texttt{cuda-gdb}. The interface of this tool is almost as similar as the interface of known Linux compiler \texttt{gdb}.
+Debugging of the device code is slightly different from debugging the code for the host. It requires a special debugger. The one that comes with CUDA Toolkit is called \texttt{cuda-gdb}.~\cite{cuda_gdb} The interface of this tool is almost the same as the interface of known Linux compiler \texttt{gdb}.
 
-The CUDA Toolkit also provides tools for kernel profiling and feature rich libraries for common computation problems on CUDA platform.
+%The CUDA Toolkit also provides tools for kernel profiling and feature rich libraries for the common computation problems on CUDA platform.
 
 
 
@@ -367,6 +368,17 @@ The usage of CMake and the new options of building EACirc are explained in detai
 \section{Project settings for CUDA}
 
 It is now much easier to set the project for CUDA support with CMake than with ordinal makefiles. When the CUDA Toolkit \cite{cuda_toolkit} is installed and automatically found by CMake\footnote{If CUDA Toolkit is installed on the build machine but not found by CMake automatically then the path to CUDA Toolkit can be specified manually.} then the option \texttt{BUILD\_CUDA} becomes available. If this option is enabled then the \texttt{eacirc} executable is build using Nvidia \cite{nvidia} \texttt{nvcc} compiler and the C preprocessor macro \texttt{CUDA} is defined causing that the executable will be runnable on CUDA capable devices. When writing a code for CUDA the preprocessor macro \texttt{CUDA} can be queried.
+
+
+
+
+
+\chapter{The Gate Circuit of EACirc}
+\section{Functional specification}
+\section{GPU implementation}
+
+
+
 
 \printbibliography[heading=bibintoc]
 \todo{Fix the autors of online resources}
