@@ -70,19 +70,19 @@
 
 \MainMatter
 \chapter{Introduction}
-Random data and the concept of randomness are used in many branches of informatics. However one of the most fundamental use of these principles is in cryptography and IT security. For instance let there be an communication among several entities. The main content of the communication is meant to stay hidden from others entities, thus the communication needs to be encrypted by a chosen encryption protocol. The potential attacker\footnote{The one who wants to know the hidden content of the encrypted communication without permission of legal participants.} could intercept some encrypted messages and subject them to analysis. On the basis of certain traits of the protocol or similarities among individual messages the encryption could be broken and the hidden content of the communication could be read by the attacker. Thus the goal of encryption protocols is that the encrypted messages is not similar or does not have some characteristic traits. In other words, the encrypted messages must look like random data to the attacker. But these constraints are very difficult to provide.
+Random data and the concept of randomness are used in many branches of informatics. However, one of the fundamental ways how to use these principles is in cryptography and IT security. For instance, let there be a communication among several entities. The main content of the communication is meant to stay hidden from other entities, thus the communication needs to be encrypted by a chosen encryption protocol. The potential attacker\footnote{The one who wants to know the hidden content of the encrypted communication without permission of legal participants.} could intercept some encrypted messages and subject them to analysis. On the basis of certain traits of the protocol or similarities among the individual messages the encryption could be broken and the hidden content of the communication could be read by the attacker. Therefore, the goal of encryption protocols is that the encrypted messages are not similar or do not have some characteristic traits. In other words, the encrypted messages must look like random data to the attacker. However, this is very difficult to be ensured.
 
-That is why tools have been created to test randomness and thus quality of ciphers. One of these tools is called EACirc and is developed at the Faculty of Informatics of Masaryk University in CRoCS laboratory (Centre for Research on Cryptography and Security). It can tell how much the input data are close to a referential random data.\footnote{This is only an approximative explanation. The exact definition and meaning of EACirc results are described in Martin Ukrop's thesis Usage of evolvable circuit for statistical testing of randomness~\cite{ukrop_thesis} since the accurate understanding of EACirc tool is not relevant for this thesis.} To achieve this EACirc uses raw computation power. However the computations are not run in parallel. If it was the case the whole process would be significantly speeded-up. Faster evaluation could advance capabilities of EACirc and help to test the randomness in much more detail. Speeding-up the EACirc is the primary objective of this thesis.
+That is why tools have been created to test randomness, and thus quality, of ciphers. One of these tools is called EACirc and is being developed at the Faculty of Informatics of Masaryk University in CRoCS laboratory (Centre for Research on Cryptography and Security). It can tell how much the input data are close to the referential random data.\footnote{This is only an approximative explanation. The exact definition and meaning of EACirc results are described in Martin Ukrop's thesis Usage of evolvable circuit for statistical testing of randomness~\cite{ukrop_thesis} since the accurate understanding of EACirc tool is not relevant for this thesis.} To achieve this EACirc uses raw computation power. However, the computations are not run in parallel. If it was the case the whole process would be significantly speeded-up. Faster evaluation could advance capabilities of EACirc and help to test the randomness in a more detailed manner. Speeding-up the EACirc is the primary objective of this thesis.
 
-The speed-up of EACirc is achieved with running some chosen computations on a GPU. The GPU must have got a build-in support of a general purpose programming (GPGPU). Such chip can perform not only algorithms used in rendering of computer graphics but also almost every other algorithm that is runnable on a CPU. The main difference against CPU is that the CPU is optimized to minimize latency whereas GPU is optimized to maximize throughput. Latency is a time that is needed to start and finish the execution of a single instruction including time ro load necessary data. On the other hand, throughput\label{throughput} is a number meaning how much instructions can be processed per one time unit.~\cite[p.~7]{professional_cuda} Since some parts of EACirc processes a lot of data with algorithms, which does not need to be optimized for latency\footnote{An algorithm that needs to be optimized for latency in order to maximize performance is that one which has lots of edges in it's control flow graph.}, the use of GPU's is suitable.
+The speed-up of EACirc is achieved with running some chosen computations on a GPU. The GPU must have got a build-in support of a general purpose programming (GPGPU). Such chip can perform not only algorithms used in rendering of computer graphics but also almost every other algorithm that is runnable on a CPU. The main difference in comparison with CPU is that the CPU is optimized to minimize latency whereas GPU is optimized to maximize throughput. Latency is the time needed to start and finish the execution of a single instruction including time to load necessary data. On the other hand, throughput\label{throughput} is a number which means how much instructions can be processed per one time unit.~\cite{professional_cuda} Since some parts of EACirc process a lot of data with algorithms which does not need to be optimized for latency\footnote{An algorithm that needs to be optimized for latency in order to maximize performance is that one which has lots of edges in it's control flow graph.} the use of GPU's is suitable.
 
-Because GPGPU programming needs a specially enhanced hardware from the manufacturer several different solutions exist on the market which can be used. The solution used for this thesis is called CUDA~\cite{about_cuda} which is a proprietary technology developed by NVIDIA.~\cite{nvidia} The decision to use CUDA was made by my advisor.
+Several different solutions exist on the market which can be used for GPGPU programming. Each solution provides different special features. The solution used for this thesis is called CUDA~\cite{about_cuda} and it is a proprietary technology developed by NVIDIA.~\cite{nvidia} The decision to use CUDA was taken by my advisor.
 
-Since the performance of GPGPU is dependable on used hardware the achieved speed-up was measured by an experimental method. The benchmarks took place particularly on machines which are used at laboratory CRoCS for their own computations and which are capable to run a CUDA programs.
+Since the performance of GPGPU is dependable on the used hardware the achieved speed-up was measured by an experimental method. The benchmarks took place particularly on machines which are being used at CRoCS laboratory for their own computations and are capable to run CUDA programs.
 
-\medskip
+\bigskip
 
-To set the EACirc project to use the CUDA technology required non-trivial intervention into settings for building the project from the sources, i.e. into the makefiles. This intervention would have resulted in a long-term unmaintainable and chaotic project if the previous workflow was preserved. To prevent this the secondary objective of this thesis is to improve the previous build-system of the EACirc project b\ using the open-source CMake~\cite{cmake} supportive tool which was developed by Kitware corporation~\cite{kitware}.
+To set EACirc project for using CUDA, a non-trivial intervention into the settings of the project was needed. If the original settings of EACirc had been applied then this intervention would have resulted into a chaotic and further unmaintainable project. Therefore, in addition to the primary objective of this thesis to speed-up EACirc, the secondary objective is to remade the settings completely from scratch in order to prevent the problems that emerged by using CUDA. For this purpose an open-source tool CMake~\cite{cmake} was used that was developed by Kitware corporation~\cite{kitware}.
 
 
 
@@ -98,8 +98,7 @@ As stated on the NVIDIA website \cite{about_cuda}, "CUDA is a parallel computing
 	\label{fig:cpu_vs_gpu_arch}
 \end{figure}
 
-\noindent
-The figure~\ref{fig:cpu_vs_gpu_arch} shows a high level view of the CPU and GPU architecture. They both contain the same parts: DRAM, Cache, Control, and ALU. DRAM and Cache are memory chips, the difference is that Cache is much smaller but significantly faster. The Control unit is responsible mainly for instruction fetching, decoding, etc. ALU is simply a worker that processes the input data. CPU's Control unit and Cache is much bigger and focuses on flow control and data caching in order to reduce the latency. The GPU's counterparts are simpler but multiplied which allows to focus on data processing (throughput) and data parallelism. It is worth mentioning that the DRAM of a GPU is significantly faster in order to supply enough data to the big number of ALUs and to keep them busy.\footnote{The memory model of GPU is described in section~\ref{memory_hiearchy}.}
+The figure~\ref{fig:cpu_vs_gpu_arch} shows a high level view of the CPU and GPU architecture. They both contain the same parts: DRAM, Cache, Control, and ALU. DRAM and Cache are memory units, the difference is that Cache is much smaller but significantly faster. The Control unit is responsible mainly for instruction fetching, decoding, etc. ALU is simply a worker that processes the input data. CPU's Control unit and Cache is much bigger and focuses on flow control and data caching in order to reduce the latency. The GPU's counterparts are simpler but multiplied, which allows to focus on data processing (throughput) and data parallelism. It is worth mentioning that the DRAM of a GPU is significantly faster in order to supply enough data to the big number of ALUs and to keep them busy.\footnote{The memory model of GPU is described in section~\ref{memory_hiearchy}.}
 
 The performance of GPU is mainly measured by two variables: throughput and memory bandwidth. Since GPU is mainly used to compute with real numbers throughput\footnote{For definition of throughput see section~\ref{throughput}.} is expressed in units of floating-point operations per second (FLOPS).\footnote{Floating-point operation is an operation on floating-point numbers which in informatics represents real numbers according to the international standard IEEE 754.} Memory bandwidth is the amount of data that can be processed per unit of time which is expressed in units of bytes per second (Bps).~\cite{professional_cuda} The figures~\ref{fig:gpu_throughput} and~\ref{fig:gpu_bandwith} show the theoretical maximum performance achievable on NVIDIA GPU's in contrast to Intel CPU's in terms of throughput and bandwidth.
 
@@ -124,9 +123,9 @@ In both, CPUs and GPUs, DRAM (figure \ref{fig:cpu_vs_gpu_arch}) is significantly
 
 Current CPUs use SIMD (Single Instruction, Multiple Data) execution model.~\cite{professional_cuda} It processes a vector of data with only one instruction. The data in CPU are cached massively to reduce latency\footnote{Data caching is a technique to avoid waiting for data which are stored in a slow storage by introducing memory hierarchy. When data are requested they are firstly searched for in faster memory. When they are not found (cache miss) then a slower memory is searched as long as they are found. Then they are promoted to the faster memory to become available to subsequent requests (cache hit). The data stored in cache which were not accessed for a long time are replaced with a new ones.} and so the ALU does not need to wait. Thus, if big data are not accessed in a wrong way the probability of cache miss is low and switching context to a different thread can be relatively expensive operation.
 
-The execution model of CUDA is called SIMT (Single Instruction, Multiple Threads).~\cite{professional_cuda} Instead of vector of data, a \emph{vector of threads} is executed with one instruction simultaneously. The vector of threads resides in one of the control units. Each thread of the execution vector is then mapped to an ALU related to the control unit. Each control unit has it's own cache. Since the cache is smaller, the cache miss is going to happen more often and another vector of threads, which has all its resources available, is executed. The switching of a thread context is done instantly with null overhead.\footnote{The section~\ref{memory_hiearchy} describes how is this achieved.} Therefore to keep the GPU busy, more threads than is the number of ALUs must be running.
+The execution model of CUDA is called SIMT (Single Instruction, Multiple Threads).~\cite{professional_cuda} Instead of vector of data, a \emph{vector of threads} is executed with one instruction simultaneously. The vector of threads resides in one of the control units. Each thread of the execution vector is then mapped to an ALU related to the control unit. Each control unit has it's own cache. Since the cache is smaller, the cache miss is going to happen more often and another vector of threads, which has all its resources available, is executed. The switching of a thread context is done instantly with null overhead.\footnote{The section~\ref{memory_hiearchy} describes how is this achieved.} Therefore, to keep the GPU busy, more threads than the number of ALUs must be running.
 
-In CUDA terminology the control units are called \emph{Streaming Multiprocessors} (SMs). Each SM has it's own ALUs referred to as \emph{cores}. The single thread vector composes of 32 threads which is called a \emph{warp}. From the SIMT architecture imply that all threads of the warp are performing the same instruction simultaneously at the same time.~\cite{cuda_guide}
+In CUDA terminology the control units are called \emph{Streaming Multiprocessors} (SMs). Each SM has its own ALUs referred to as \emph{cores}. The single thread vector is composed of 32 threads and this is called \emph{warp}. The SIMT architecture implies that all threads of the warp are performing the same instruction simultaneously at the same time.~\cite{cuda_guide}
 
 
 \section{Thread hierarchy}
@@ -135,7 +134,7 @@ The SIMT architecture of GPU is well suited and designed for computational probl
 
 In CUDA context a \emph{kernel} is a top-level function that is runnable on CUDA capable devices.~\cite{cuda_guide} It is recommended that the kernel processes only the smallest portion of input data that can be processed separately.~\cite{data_parallel_algorithms} For instance, when adding two vectors the kernel should just add two corresponding scalars of the vector.
 
-For each kernel that is being run a separate lightweight thread is created on the device. As shown in figure \ref{fig:grid} a group of threads is forming a \emph{block} and a group of blocks is forming a \emph{grid}. Each thread has got unique ID dependant on it's position in the block and each block has unique ID dependant on it's position in the grid.\footnote{The grid might have up to 3 dimensions.~\cite{cuda_guide}}
+For each kernel that is running a separate lightweight thread is created on the device. As shown in figure \ref{fig:grid} a group of threads is forming a \emph{block} and a group of blocks is forming a \emph{grid}. Each thread has got unique ID dependant on its position in the block and each block has unique ID dependant on its position in the grid.\footnote{The grid might have up to 3 dimensions.~\cite{cuda_guide}}
 
 \begin{figure}[H]
 	\centering
@@ -144,8 +143,7 @@ For each kernel that is being run a separate lightweight thread is created on th
 	\label{fig:grid}
 \end{figure}
 
-\noindent
-The dimensions of the grid should correspond to the dimensions of the computational problem. In the example of adding vectors the grid should have the same width as the number of scalars in the vector. Since each thread has a unique ID the kernel knows which scalars to add and what is the position of the result in the final vector.
+The dimensions of the grid should correspond to the dimensions of the computational problem. In the example of adding vectors the grid should have the same width as the number of scalars in the vector. Since each thread has a unique ID the kernel knows which scalars to add and where to put the result into the final vector.
 
 The execution of a single kernel is initiated as soon as the device has enough available resources to run a whole block.\footnote{Threads of the same block are running concurrently.}~\cite{cuda_guide} This constraint allows that the threads of one block can communicate with each other (see section \ref{memory_hiearchy}) and that the computational problem can be scaled across different types of CUDA GPUs that disposes with other hardware capabilities.\footnote{For instance the number of cores or available memory.}~\footnote{Any program scales if and only if a similar performance is achieved for arbitrary size of input data or across different hardware.~\cite{cuda_best_practices} It is recommended that any well optimized program for CUDA scales.} The execution order of the blocks is not defined.
 
@@ -154,22 +152,22 @@ To fully utilize the device the size of the block should be multiple of a warp s
 \section{Memory hierarchy}
 \label{memory_hiearchy}
 
-CUDA devices dispose with multi level memory model. Each level differs in size, speed, and accessibility. The main levels are \emph{global memory}, \emph{shared memory}, and \emph{local memory}.\footnote{In heterogeneous programming the GPU global memory is denoted as subset of \emph{device memory} and CPU memory is denoted as \emph{host memory}. More about heterogeneous programming is in section~\ref{heterogeneous_programming}.}~\cite{cuda_guide}
+CUDA devices dispose with a multi level memory model. Each level differs in size, speed, and accessibility. The main levels are \emph{global memory}, \emph{shared memory}, and \emph{local memory}.\footnote{In heterogeneous programming the GPU global memory is denoted as subset of \emph{device memory} and CPU memory is denoted as \emph{host memory}. More about heterogeneous programming is in section~\ref{heterogeneous_programming}.}~\cite{cuda_guide}
 
 The global memory is the slowest and the biggest. The data living in the global memory are accessible everywhere in the device. The access to the data is done via 32-, 64-, or 128-byte transactions. The access should fulfil several constraints to achieve maximum performance. One of these restrictions is a coalesced access.\footnote{Other constraints are not relevant for this thesis.} The coalesced access appears if every thread in the block order reads or writes on the subsequent address simultaneously. The global memory should be mainly used for kernel's input/output data and the number of accesses should be minimal.
 
-The shared memory is fast. It is almost as fast as registers and hundreds of times faster than the global memory. It resides in Streaming Multiprocessor's (SM) cache. The data are accessible only by threads of the same block. The number of running blocks on SM is mainly determined by the size of the shared memory required for a single block which should be known before the block starts executing. Again there are access restriction for maximum performance. The address space of the memory is alternately divided into 32 (warp size) memory banks of size 32,- or 64-bytes. Each thread of the warp should access to the different memory bank resulting into only one transaction. Otherwise the access will be serialized to the number of transactions depending on the maximum number of accesses to one memory bank.\footnote{If multiple threads are requesting value from one address the access will not be serialized but the value will be broadcast resulting only in one transaction.}
+The shared memory is fast. It is almost as fast as registers and hundreds of times faster than the global memory. It resides in Streaming Multiprocessor's (SM) cache. The data are accessible only by threads of the same block. The number of running blocks on SM is mainly determined by the size of the shared memory required for a single block, which should be known before the block starts executing. Again, there are access restriction for maximum performance. The address space of the memory is alternately divided into 32 (warp size) memory banks of size 32- or 64-bytes. Each thread of the warp should access the different memory bank, which will result in only one transaction. Otherwise the access would be serialized to the number of transactions depending on the maximum number of accesses to one memory bank.\footnote{If multiple threads are requesting value from one address the access will not be serialized but the value will be broadcast resulting only in one transaction.}
 
 The performance of the local memory is almost the same as of the global memory which is slow. The data lives only for the lifespan of a thread and is accessible only by the owning thread. The local memory is only used in a few scenarios described in CUDA C Programming guide~\cite{cuda_guide} in section Device Memory Accesses.
 
-Besides global, shared and local levels of memory a \emph{constant memory} exists.\footnote{There is also a \emph{texture memory} but the its description is irrelevant for this thesis. For more informations see~\cite{cuda_guide}}~\cite{cuda_guide} It is a special kind of memory that is meant for constants and is implemented in almost the same way as the global memory. A single access to the constant memory is as slow as an access to the global memory. Since the data in this memory are constants (read-only values) they can be massively cached and the subsequent readings are as fast as readings from shared memory. Lifespan of the data living in the constant memory is the same as of the data living in the global memory.
+Besides global, shared and local levels of memory a \emph{constant memory} exists.\footnote{There is also a \emph{texture memory} but its description is irrelevant for this thesis. For more informations see~\cite{cuda_guide}}~\cite{cuda_guide} It is a special kind of memory that is meant for constants and is implemented in almost the same way as the global memory. A single access to the constant memory is as slow as an access to the global memory. Since the data in this memory are constants (read-only values) they can be massively cached and the subsequent readings are as fast as readings from shared memory. Lifespan of the data living in the constant memory is the same as of the data living in the global memory.
 
 Every other suitable variable of the scope of a kernel is placed into register. Registers are very fast. The number of registers for each Streaming Multiprocessor~(SM) is large so that each SM may have a lot of active threads and to switch their context easily.\footnote{See SIMT architecture and switching of thread context in section~\ref{cuda_architecture}.} The number of active blocks and threads is determined by the count of used registers by one kernel.
 
 \section{Heterogeneous programming}
 \label{heterogeneous_programming}
 
-A heterogeneous system is a system composed of more than one kind of a processor.~\cite{professional_cuda} The CUDA philosophy supposes that CUDA executes on a physically separate \emph{device} (GPU) that acts as a coprocessor to the program that is running on the \emph{host} (CPU). The state of the device and the host is stored in their own physically separate memory space referred to as the \emph{device memory} and the \emph{host memory}. Therefore the host program is in charge of the device resources and manages launching of kernels.~\cite{cuda_guide}
+A heterogeneous system is a system composed of more than one kind of processor.~\cite{professional_cuda} The CUDA philosophy supposes that CUDA executes on a physically separate \emph{device} (GPU) that acts as a coprocessor to the program that is running on the \emph{host} (CPU). The state of the device and the host is stored in their own physically separate memory space referred to as the \emph{device memory} and the \emph{host memory}. Therefore, the host program is in charge of the device resources and manages launching of kernels.~\cite{cuda_guide}
 
 The most often used scenario of kernel launch including device and host resource management is as follows:
 \begin{enumerate}[noitemsep]
@@ -184,19 +182,19 @@ The most often used scenario of kernel launch including device and host resource
 \end{enumerate}
 
 \noindent
-Since most of these actions are input/output operations, they may be performed either synchronously or asynchronously.\footnote{A synchronous operation blocks execution of the host program for the duration of the operation. An asynchronous operation does not block the execution of the host program and the incoming/outgoing transmission can be overlapped with computation. The host program is then notified whether the asynchronous operation succeeded or failed.~\cite{async_io}} The execution of the kernel on the device is always asynchronous.~\cite{cuda_guide}
+Since most of these actions are input/output operations, they may be performed either synchronously or asynchronously.\footnote{A synchronous operation blocks execution of the host program for the duration of the operation. An asynchronous operation does not block the execution of the host program and the incoming/outgoing transmission can overlap with computation. The host program is then notified whether the asynchronous operation succeeded or failed.~\cite{async_io}} The execution of the kernel on the device is always asynchronous.~\cite{cuda_guide}
 
 \section{Compute capabilities}
 
-As producing an optimized code for CUDA devices is closely linked to their hardware parameters~\cite{cuda_best_practices} and almost with every new product line of NVIDIA GPUs a new features are introduced, NVIDIA established a system for backward and a forward compatibility. The GPUs were divided to the classes reflecting the technical parameters and runtime features of CUDA platform. These classes are referred to as compute capabilities.\footnote{For full list of compute capabilities corresponding to the date of release of this thesis see CUDA~C~Programming~Guide \cite{cuda_guide} section G.~Compute~Capabilities}.
+As producing an optimized code for CUDA devices is closely linked to their hardware parameters~\cite{cuda_best_practices} and because with almost every new product line of NVIDIA GPUs new features are introduced, NVIDIA established a system for backward and forward compatibility. The GPUs were divided to the classes reflecting technical parameters and runtime features of CUDA platform. These classes are referred to as compute capabilities.\footnote{For full list of compute capabilities corresponding to the date of release of this thesis see CUDA~C~Programming~Guide \cite{cuda_guide} section G.~Compute~Capabilities}.
 
 \section{Programming language}
 
-The main programming languages for CUDA are \emph{C} and \emph{C++} which are enriched by several CUDA specific keywords. Since \emph{C++} is a high-level language some \emph{C++} features are not supported in the device code. The source code for the device and for the host may be mixed together and placed into one source file jointly.~\cite{cuda_guide}
+The main programming languages for CUDA are \emph{C} and \emph{C++} which are enriched by several CUDA specific keywords. Since \emph{C++} is a high-level language, some \emph{C++} features are not supported in the device code. The source code for the device and for the host may be mixed together and placed into one source file jointly.~\cite{cuda_guide}
 
-The listing \ref{listing:cuda_example} shows a sample CUDA code of vector addition on the device. The sample follows the scenario of launching the kernel as described in section \ref{heterogeneous_programming}.
+The listing \ref{listing:cuda_example} shows a sample of CUDA code which produces a sum of two vectors on the device. The sample follows the scenario of launching the kernel as described in section \ref{heterogeneous_programming}.
 
-However one caution should be remembered before porting an algorithm to the CUDA platform. If an algorithm contains an \emph{if-then-else} statement and any thread of the warp evaluates the condition differently then the different execution paths will be serialized. The execution paths will merge after every thread of the warp executes its execution path. Fortunately some techniques exists to avoid this artefact. This principle also applies on other language control flow constructs as loops, goto statements, and etc.~\cite{cuda_guide}
+However, one caution should be remembered before porting an algorithm to the CUDA platform. If an algorithm contains an \emph{if-then-else} statement and any thread of the warp evaluates the condition differently then the different execution paths are serialized. The execution paths merge after every thread of the warp finished its execution path. Fortunately some techniques exists to avoid this artefact. This principle also applies on other language control flow constructs such as loops, goto statements, etc.~\cite{cuda_guide}
 
 \begin{listing}[h]
 	\begin{minted}[autogobble, linenos, frame=single, xleftmargin=2em]{cuda}
@@ -258,9 +256,9 @@ However one caution should be remembered before porting an algorithm to the CUDA
 
 \section{Tools}
 
-NVIDIA provide the necessary tools for developing on CUDA platform through CUDA Toolkit package. The source files of the CUDA programs must be compiled by a special compiler. The compiler that comes with the CUDA Toolkit is called \texttt{nvcc}.~\cite{cuda_compiler} The compiler supports mixing the code for the host with the code for the device. The \texttt{nvcc} identifies the code for the device and compiles it to the intermediate object file. The remaining code for the host is then forwarded to the ordinary compiler for \emph{C/C++} like \texttt{gcc}, \texttt{clang}, or \texttt{cl}. The object files from the \texttt{nvcc} and the host compiler are then linked into the form of binary using ordinary linker or by \texttt{nvcc}. Therefore, the formed binary includes both the code for the host and for the device.
+NVIDIA provides the necessary tools for the development on CUDA platform through CUDA Toolkit package.~\cite{cuda_toolkit} The source files of CUDA programs must be compiled by a special compiler. The compiler that comes with the CUDA Toolkit is called \texttt{nvcc}.~\cite{cuda_compiler} The compiler supports mixing the code for the host with the code for the device. The \texttt{nvcc} identifies the code for the device and compiles it to an intermediate object file. The remaining code for the host is then forwarded to the ordinary compiler for \emph{C/C++} like \texttt{gcc}, \texttt{clang}, or \texttt{cl}. The object files from the \texttt{nvcc} and the host compiler are then linked into the binary form using ordinary linker or by \texttt{nvcc}. Therefore, the formed binary includes both the code for the host and for the device.
 
-Debugging of the device code is slightly different from debugging the code for the host. It requires a special debugger. The one that comes with CUDA Toolkit is called \texttt{cuda-gdb}.~\cite{cuda_gdb} The interface of this tool is almost the same as the interface of known Linux compiler \texttt{gdb}.
+Debugging of the device code is slightly different from debugging of the code for the host. It requires a special debugger. The one that comes with CUDA Toolkit is called \texttt{cuda-gdb}.~\cite{cuda_gdb} The interface of this tool is almost the same as the interface of the known Linux compiler \texttt{gdb}.
 
 %The CUDA Toolkit also provides tools for kernel profiling and feature rich libraries for the common computation problems on CUDA platform.
 
@@ -269,19 +267,22 @@ Debugging of the device code is slightly different from debugging the code for t
 
 
 \chapter{CMake}
-The EACirc sources mainly consists of \emph{C} and \emph{C++} code. The code was divided into reasonably logical sections but the overall structure and concept of the project were monolithic.\footnote{A monolithic binary is an executable that does not need any other dependencies or resources at a runtime. In other words, the binary is independent.} This led to compilation of all sources into one big executable of approximately 9~MB which took some non-trivial time.
 
-On top of this EACirc is developed as a cross-platform application. To provide native builds for each supported platform (Windows \cite{win} and Linux) special makefile or an IDE specific project file were used which described how to build the application. When a change in the build was introduced, e.g. a new source file was added, the change had to be manually implemented to all makefiles to provide consistency. This workflow was not easy to maintain as the violation of these rules could cause an uncomfortable pitfall.
+To set EACirc project for using CUDA, an intervention into the settings of the project was needed. Bellow the original settings and workflow of EACirc are described which, however,  had to be remade from scratch.
 
-To solve these problems the CMake \cite{cmake} tool was integrated into the project of EACirc along with some changes to the basic structure of EACirc. The CMake tool is developed and maintained by Kitware, Inc. \cite{kitware} as an open-source software. The main purpose of this tool is to provide native builds of cross-platform applications and to minimize the effort to maintain the project.
+The EACirc sources consist mainly of \emph{C} and \emph{C++} code. The code is divided into reasonably logical sections, but the overall structure and concept of the project are monolithic.\footnote{A monolithic binary is an executable that does not need any other dependencies or resources at a runtime. In other words, the binary is independent.} This leads to compilation of all sources into one big executable of approximately 9~MB, which takes some non-trivial time.
 
-Although there are many similar tools as CMake and some of them provides better features they are not so widely supported. For instance CMake generates project files for almost every common IDE and some of those IDEs comes with a built-in support for CMake.
+On top of this EACirc is developed as a cross-platform application. To provide native builds for each supported platform (Windows~\cite{win} and Linux) a special makefile or an IDE specific project file are used simultaneously. They describe how to build the application. When a change in the build is introduced, e.g. a new source file is added, the change has to be manually implemented to all makefiles to provide consistency. This workflow is not easy to maintain as the violation of these rules can cause an uncomfortable pitfall.
+
+To solve these problems the CMake~\cite{cmake} tool was integrated into the project of EACirc along with some changes of the basic structure of EACirc. The CMake tool is developed and maintained by Kitware, Inc.~\cite{kitware} as an open-source software. The main purpose of this tool is to provide native builds of cross-platform applications and to minimize the effort to maintain the project.
+
+Although there are many similar tools as CMake and some of them provide better features they are not so widely supported. For instance, CMake generates project files for almost every common IDE and some of these IDEs come with a built-in support for CMake.
 
 \section{CMake toolset}
 
-The CMake is actually a set of several tools that are taking care of building, testing, and deploying a user's \emph{C} or \emph{C++} project. These tools can be installed on Linux, Windows, or MacOSX. The CMake toolkit consists of the main tool \texttt{cmake} and the supportive \texttt{ccmake} (or \texttt{cmake-gui}), \texttt{ctest}, and \texttt{cpack}.
+The CMake is actually a set of several tools that provide for building, testing, and deploying of user's \emph{C} or \emph{C++} project. These tools can be installed on Linux, Windows, or MacOSX. The CMake toolkit consists of the main tool \texttt{cmake} and the supportive \texttt{ccmake} (or \texttt{cmake-gui}), \texttt{ctest}, and \texttt{cpack}.~\cite{cmake_docs}
 
-The \texttt{cmake} tool takes a configuration file called \texttt{CMakeLists.txt} distributed with the project source files and generates the platform specific makefiles as an output. Then the user invokes a platform specific tool for building -- usually \texttt{make}, \texttt{ninja} \cite{ninja}, or \texttt{MSBuild}. \cite{msbuild} If the process is successful the native binaries of the project are now made.
+The \texttt{cmake} tool takes a configuration file called \texttt{CMakeLists.txt} distributed with the project source files and generates the platform specific makefiles as an output. Then the user invokes a platform specific tool for building -- usually \texttt{make}, \texttt{ninja}~\cite{ninja}, or \texttt{MSBuild}.~\cite{msbuild} If the process is successful the native binaries of the project are now made.
 
 The \texttt{ctest} tool provides a simple platform for project testing. If the build is successful the user can run some custom made tests on the binaries.
 
@@ -291,21 +292,21 @@ The remaining \texttt{ccmake} and \texttt{cmake-gui} are just more convenient wa
 
 \section{A closer look at the \texttt{cmake} executable}
 
-The \texttt{cmake} executable is not just a dummy build-system. The process of generating a makefile is quite sophisticated. At first the user chooses the \emph{source directory} and the \emph{build directory}. Then (s)he invokes the \texttt{cmake} command in a \emph{build directory} with appropriate parameters. The subsequent process consists of several phases -- selection of a native build-system (in a CMake terminology referenced as a \emph{generator}), configuration based on a user-specific input, and the own generation of a makefile.\footnote{Note that the exact scheme of this process can differ according to which interface of CMake is used -- i.e. \texttt{cmake}, \texttt{ccmake}, or \texttt{cmake-gui}.}
+The \texttt{cmake} executable is not just a dummy build-system. The process of generating a makefile is quite sophisticated. First, the user chooses the \emph{source directory} and the \emph{build directory}. Then (s)he invokes the \texttt{cmake} command in a \emph{build directory} with appropriate parameters. The subsequent process consists of several phases -- selection of a native build-system (in a CMake terminology referenced as a \emph{generator}), configuration based on a user-specific input, and the generation of a makefile itself.\footnote{Note that the exact scheme of this process can differ according to which interface of CMake is used -- i.e. \texttt{cmake}, \texttt{ccmake}, or \texttt{cmake-gui}.}~\cite{cmake_docs}
 
-The \emph{source directory} is simply a directory where the project sources are located and as well as the top-level \texttt{CMakeLists.txt} file which is distributed with the sources. The build directory is an empty user-created directory in which the user wants the binaries to be build.
+The \emph{source directory} is simply a directory where the project sources are located as well as the top-level \texttt{CMakeLists.txt} file which is distributed with the sources. The build directory is an empty user-created directory in which the user wants the binaries to be build.
 
-The selection of the \emph{generator} depends on the user's platform, on the user-installed native build-systems, and on the user's intentions. The generator used on Linux is usually \texttt{make} or \texttt{ninja}. When the user wants to generate project files to a specific IDE, he chooses the appropriate generator -- e.g. Visual Studio 2013 \cite{msvc} on Microsoft Windows \cite{win}. Usually the selection of the appropriate generator is done by CMake automatically.
+The selection of the \emph{generator} depends on the user's platform, on the user-installed native build-systems, and on the user's intentions. The generator used on Linux is usually \texttt{make} or \texttt{ninja}. If the user wants to generate project files to a specific IDE, (s)he chooses the appropriate generator -- e.g. Visual Studio 2013~\cite{msvc} on Microsoft Windows~\cite{win}. Usually the selection of the appropriate generator is done by CMake automatically.
 
-The subsequent phase is configuration. Here the user specifies variable options for the build that the project supports. For instance some features of the application can be switched on/off or the location of a third party dependencies can be specified. Also the different build configuration can be switched, i.e. release or debug.
+The subsequent phase is configuration. Here the user specifies variable options for the build that the project supports. For instance, some features of the application can be switched on/off or the location of a third party dependencies can be specified. Also the different build configuration can be switched, i.e. release or debug.
 
 If the configuration is all right then the makefile is successfully created in the \emph{build directory}. Then the user just invokes the appropriate tool to execute the makefile and the binaries are build.
 
 It is worth mentioning that the makefile automatically detects any changes made in the \emph{source directory}. So the user invokes the \texttt{cmake} executable just once to generate the makefile or to change the variable options of the build. The makefile also provides a way to install the application and/or to test it.
 
-The minimal and the most common sequence of commands to build and install a project on Linux using the CMake is as follows:
+The minimal and the most common sequence of commands to build and install a project on Linux using the CMake is shown in listing~\ref{listing:cmake_example}.
 
-\begin{listing}[H]
+\begin{listing}[h]
 	\begin{minted}[autogobble]{text}
 	mkdir <build_directory>
 	cd <build_directory>
@@ -314,43 +315,49 @@ The minimal and the most common sequence of commands to build and install a proj
 	make install
 	\end{minted}
 	\caption{The minimal CMake workflow.}
+	\label{listing:cmake_example}
 \end{listing}
 
-\noindent
-Note that the \texttt{make} is chosen as a default generator. In addition the default project settings and configurations are applied. The binaries are installed to the platform specific location, i.g. on Linux it is \texttt{/usr/share/local}.
+Note that the \texttt{make} is chosen as a default generator. In addition, the default project settings and configurations are applied. The binaries are installed to the platform specific location, i.g. on Linux it is \texttt{/usr/share/local}.
 
 \section{Changes made to the EACirc repository structure}
 
-There were several changes made to the EACirc repository structure. The new folder design reflects the logical structure of the EACirc philosophy.
+There were several changes made to the EACirc repository structure. The new folder design reflects the logical structure of the EACirc philosophy. The changes are shown in the figure~\ref{fig:repository_changes}.
 
-	\begin{figure}[H]
+\begin{figure}[h]
 	\centering
 	\include{figures/old_vs_new_repo}
 	\caption{Old vs. new repository structure}
-	\end{figure}
-	
-\noindent
+	\label{fig:repository_changes}
+\end{figure}
+
 The first and also the smallest change was to name all source folders with only small letters. Next the libraries from 3rd party providers \texttt{catch}, \texttt{galib}, and \texttt{tinyXML} were moved into the separate folder -- the \emph{libs} directory.
 
-Then the so called \emph{projects} were isolated. A \emph{project} in EACirc terminology means a problem solving module. These \emph{projects} are \texttt{caesar}, \texttt{estream}, \texttt{sha3}, \texttt{files} and \texttt{pregenerated\_tv}. Since \texttt{files} and \texttt{pregenerated\_tv} are both just small modules consisting from only one source file, it would be impractical to isolated them. Whereas the big modules \texttt{caesar}, \texttt{estream}, and \texttt{sha3} were moved to the the separate folder called the \emph{projects} folder. Each of the isolated projects was remade to compile into a static library.\footnote{There is a plan to remake the projects to modules loaded dynamically at runtime. This would require to compile them separately into the dynamic libraries.}
+Then the so called \emph{projects} were isolated. A \emph{project} in EACirc terminology means a problem solving module. These \emph{projects} are \texttt{caesar}, \texttt{estream}, \texttt{sha3}, \texttt{files} and \texttt{pregenerated\_tv}. Since \texttt{files} and \texttt{pregenerated\_tv} are both just small modules consisting of only one source file, it would be impractical to isolated them. Whereas the big modules \texttt{caesar}, \texttt{estream}, and \texttt{sha3} were moved to the separate folder called the \emph{projects} folder. Each of the isolated projects was remade to compile into a static library.\footnote{There is a plan to remake the projects to modules loaded dynamically at runtime. This would require to compile them separately into the dynamic libraries.}
 
-The content od folders \texttt{eacirc} and \texttt{oneclick} is build into executables which are named accordingly to their corresponding folder. The \emph{projects} which are now compiled into the static libraries are now statically linked to the \texttt{eacirc} executable representing the EACirc tool as a whole. The \texttt{oneclick} executable is a supportive tool for automated task management developed by Ľubomír Obrátil. \cite{oneclick}
+The content od folders \texttt{eacirc} and \texttt{oneclick} is build into executables which are named accordingly to their corresponding folder. The \emph{projects} which are now compiled into the static libraries are now statically linked to the \texttt{eacirc} executable representing the EACirc tool as a whole. The \texttt{oneclick} executable is a supportive tool for the automated task management developed by Ľubomír Obrátil.~\cite{oneclick}
 
 \section{The new build-system of EACirc}
 
-The new build-system is written on the CMake platform. This platform allows to define custom options for generating the build. Here is a descriptive list of EACirc specific options:
+The new build-system is written on the CMake platform. This platform allows to define custom options for generating the build. A descriptive list of EACirc specific options is given below:
 
-\begin{description}
-	\item[\texttt{BUILD\_ONECLICK}] enables building of Oneclick, the supportive tool for EACirc.
-	\item[\texttt{BUILD\_CAESAR}] enables building of the Caesar project.
-	\item[\texttt{BUILD\_ESTREAM}] enables building of the Estream project.
-	\item[\texttt{BUILD\_SHA3}] enables building of the SHA-3 project.
-	\item[\texttt{BUID\_CUDA}] enables to build the support for CUDA devices. This option is available only if the CUDA Toolkit \cite{cuda_toolkit} is installed on the build machine\footnote{A build machine is a physical or a virtual machine that is used to build the project.} and found by the CMake.
+\begin{description}[noitemsep]
+	\item[\texttt{BUILD\_ONECLICK}] \hfill \\
+	Enable building of Oneclick, the supportive tool for EACirc.
+	\item[\texttt{BUILD\_CAESAR}] \hfill \\
+	Enable building of the Caesar project.
+	\item[\texttt{BUILD\_ESTREAM}] \hfill \\
+	Enable building of the Estream project.
+	\item[\texttt{BUILD\_SHA3}] \hfill \\
+	Enable building of the SHA-3 project.
+	\item[\texttt{BUID\_CUDA}] \hfill \\
+	Enable to build the support for CUDA devices. This option is available only if the CUDA Toolkit \cite{cuda_toolkit} is installed on the build machine\footnote{A build machine is a physical or a virtual machine that is used to build the project.} and found by the CMake.
 \end{description}
 
 \noindent
-Since the \emph{projects} are build into static libraries they must be linked to the \texttt{eacirc} executable at the compile time. This is done automatically when the option for the specific \emph{project} is enabled. In the figure \ref{fig:deps} are shown the dependencies of the all build targets.
-	\begin{figure}[H]
+Since the \emph{projects} are build into static libraries they must be linked to the \texttt{eacirc} executable at the compile time. This is done automatically when the option for the specific \emph{project} is enabled. In the figure~\ref{fig:deps} dependencies of all the build targets are shown.
+
+\begin{figure}[h]
 	\begin{center}
 		\includegraphics[width=.8\textwidth]{figures/deps}
 	\end{center}
@@ -358,35 +365,44 @@ Since the \emph{projects} are build into static libraries they must be linked to
 	\label{fig:deps}
 	\small
 	The static libraries are shown in the rhombus. The executables have a house around them. The square represents an interface library.\footnote{Interface library does not need to be linked against. It consists only of header files.} The direction of the arrows represents that some build target depends on another one.
-	\end{figure}
+\end{figure}
 
-\noindent
-The build-system is also version aware. The current version is stored in the \texttt{eacirc/Version.h} header file. The version corresponds to git commit hash \cite{git_book}. This means that for the correct build generation git tools must be properly installed on the build machine and found by CMake.\footnote{If git tools are installed and not found automatically by CMake then the path to git tools can be specified manually.}
+The build-system is also version aware. The current version is stored in the \texttt{eacirc/Version.h} header file. The version corresponds to git commit hash~\cite{git_book}. This means that for the correct build generation git tools must be properly installed on the build machine and found by CMake.\footnote{If git tools are installed and not found automatically by CMake then the path to git tools can be specified manually.}
 
-The usage of CMake and the new options of building EACirc are explained in detail on the Github wiki project page under the Building EACirc section.
+The use of CMake and the new options of building EACirc are explained in detail on the Github wiki project page under the Building EACirc section.
 
 \section{Project settings for CUDA}
 
-It is now much easier to set the project for CUDA support with CMake than with ordinal makefiles. When the CUDA Toolkit \cite{cuda_toolkit} is installed and automatically found by CMake\footnote{If CUDA Toolkit is installed on the build machine but not found by CMake automatically then the path to CUDA Toolkit can be specified manually.} then the option \texttt{BUILD\_CUDA} becomes available. If this option is enabled then the \texttt{eacirc} executable is build using Nvidia \cite{nvidia} \texttt{nvcc} compiler and the C preprocessor macro \texttt{CUDA} is defined causing that the executable will be runnable on CUDA capable devices. When writing a code for CUDA the preprocessor macro \texttt{CUDA} can be queried.
+It is now much easier to set the project for CUDA support with CMake than with ordinal makefiles. When the CUDA Toolkit~\cite{cuda_toolkit} is installed and automatically found by CMake\footnote{If CUDA Toolkit is installed on the build machine but not found by CMake automatically then the path to CUDA Toolkit can be specified manually.} then the option \texttt{BUILD\_CUDA} becomes available. If this option is enabled then the \texttt{eacirc} executable is build by using Nvidia \texttt{nvcc} compiler~\cite{cuda_compiler} and the C~preprocessor macro \texttt{CUDA} is defined causing that the executable will be runnable on CUDA capable devices. When writing a code for CUDA the preprocessor macro \texttt{CUDA} can be queried.
 
 
 
 
 
-\chapter{The Gate Circuit of EACirc}
+\chapter{Gate Circuit of EACirc}
+
+EACirc is based on the principles of evolutionary algorithms. Generally, these algorithm search a locally optimal solution by iteration of three phases: 
+
+\todo{how eacirc processes data (explain the iteration)}
+
+\todo{what are circuit backends}
+
+\todo{what is gate circuit}
+
+\todo{why is gate circuit suitable for GPGPU}
+
+
 \section{Functional specification}
 \section{GPU implementation}
 
 
 
 
+
+%\chapter{Conclusions and future work}
+
+
+
 \printbibliography[heading=bibintoc]
-\todo{Fix the autors of online resources}
-
-\todo{Fix the titles in the bibliography to dislay big letters correctly.}
-
-\todo{Cite Lobo's theses about oneclick and fix the source.}
-
-\todo{Cite Martin Ukrop thesis in Introduction. What is EACirc?}
 
 \end{document}
