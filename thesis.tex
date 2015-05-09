@@ -5,10 +5,17 @@
 \usepackage[utf8]{inputenc}
 \usepackage{lmodern}
 \usepackage[T1]{fontenc}
+\usepackage{csquotes}
 
 \usepackage[scaled=0.86]{berasans}
 \usepackage[scaled=1.03]{inconsolata}
-\usepackage[plainpages=false, pdfpagelabels]{hyperref}
+
+\usepackage{xcolor}
+\definecolor{dark-red}{rgb}{0.6,0.15,0.15}
+\definecolor{dark-green}{rgb}{0.15,0.4,0.15}
+\definecolor{medium-blue}{rgb}{0,0,0.5}
+
+\usepackage[plainpages=false, pdfpagelabels, unicode]{hyperref}
 
 \usepackage{enumitem}
 \usepackage{microtype}
@@ -31,6 +38,7 @@
 \clubpenalty10000
 
 
+
 \thesislang{en}
 \thesistitle{GPU-based speedup of EACirc project}
 \thesissubtitle{Bachelor Thesis}
@@ -49,23 +57,22 @@
 	%\bigskip
 }
 
-
 \begin{document}
 \FrontMatter
 	\ThesisTitlePage
-	%\begin{ThesisDeclaration}
-	%	\DeclarationText
-	%	\AdvisorName
-	%\end{ThesisDeclaration}
+	\begin{ThesisDeclaration}
+		\DeclarationText
+		\AdvisorName
+	\end{ThesisDeclaration}
 	%\begin{ThesisThanks}
 		%TODO Thesis Thanks
 	%\end{ThesisThanks}
 	%\begin{ThesisAbstract}
 		%TODO Thesis Abstract
 	%\end{ThesisAbstract}
-	%\begin{ThesisKeyWords}
-		%TODO Thesis Keywords
-	%\end{ThesisKeyWords}
+	\begin{ThesisKeyWords}
+		acceleration, CUDA, CMake, GPU, GPUGPU, EACirc, software circuit, randomness testing
+	\end{ThesisKeyWords}
 	\tableofcontents
 
 \MainMatter
@@ -381,15 +388,15 @@ It is now much easier to set the project for CUDA support with CMake than with o
 
 \chapter{Gate Circuit of EACirc}
 
-EACirc is based on the principles of evolutionary algorithms. Generally, these algorithm search a locally optimal solution by iteration of three phases: 
+The purpose of EACirc is to differentiate input data and a referential random data from one another without any context. The input data consist of several sample outputs from an arbitrary random generator. The distinction is done by creating a gate circuit which processes the input data and tells the result. The internal structure of the optimal gate circuit is unknown at the moment of invocation of the EACirc program. However, the optimal form of the circuit is constructed via a genetic algorithm.~\cite{ukrop_thesis}
 
-\todo{how eacirc processes data (explain the iteration)}
+Genetic algorithms are inspired by processes of reproduction and natural selection in living systems. They are searching for a satisfactory optimal solution for a given problem. The process of producing the acceptable solution consists of creating a random initial generation of individuals and then iteratively applying evaluation of the generation, selection of the best individuals for the next generation, and creating next generation by applying genetic operators.~\cite{genetic_algorithms}
 
-\todo{what are circuit backends}
+The functionality of gate circuit is the same as an ordinary digital circuit that is composed from electronic components performing some logical function. The circuit takes a fixed width of input data and outputs if the input is random or not.\footnote{Actually the output of a circuit is not only a binary (random/non-random) but contains also several other informations that are further processed.} Since the gate circuit, in the context of EACirc, is stored in memory of a computer, the implementation differs from the real world.
 
-\todo{what is gate circuit}
+%\todo{what is gate circuit}
 
-\todo{why is gate circuit suitable for GPGPU}
+%\todo{why is gate circuit suitable for GPGPU}
 
 
 \section{Functional specification}
@@ -404,5 +411,7 @@ EACirc is based on the principles of evolutionary algorithms. Generally, these a
 
 
 \printbibliography[heading=bibintoc]
+%\listoflistings
+%\listoffigures
 
 \end{document}
