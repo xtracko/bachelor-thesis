@@ -81,7 +81,7 @@ Random data and the concept of randomness are used in many branches of informati
 
 That is why tools have been created to test randomness, and thus quality, of ciphers. One of these tools is called EACirc and is being developed at the Faculty of Informatics of Masaryk University in CRoCS laboratory (Centre for Research on Cryptography and Security). It can tell how much the input data are close to the referential random data.\footnote{This is only an approximative explanation. The exact definition and meaning of EACirc results are described in Martin Ukrop's thesis Usage of evolvable circuit for statistical testing of randomness~\cite{ukrop_thesis} since the accurate understanding of EACirc tool is not relevant for this thesis.} To achieve this EACirc uses raw computation power. However, the computations are not run in parallel. If it was the case the whole process would be significantly speeded-up. Faster evaluation could advance capabilities of EACirc and help to test the randomness in a more detailed manner. Speeding-up the EACirc is the primary objective of this thesis.
 
-The speed-up of EACirc is achieved with running some chosen computations on a GPU. The GPU must have got a build-in support of a general purpose programming (GPGPU). Such chip can perform not only algorithms used in rendering of computer graphics but also almost every other algorithm that is runnable on a CPU. The main difference in comparison with CPU is that the CPU is optimized to minimize latency whereas GPU is optimized to maximize throughput. Latency is the time needed to start and finish the execution of a single instruction including time to load necessary data. On the other hand, throughput\label{throughput} is a number which means how much instructions can be processed per one time unit.~\cite{professional_cuda} Since some parts of EACirc process a lot of data with algorithms which does not need to be optimized for latency\footnote{An algorithm that needs to be optimized for latency in order to maximize performance is that one which has lots of edges in it's control flow graph.} the use of GPU's is suitable.
+The speed-up of EACirc is achieved with running some chosen computations on a GPU. The GPU must have got a build-in support of a general purpose programming (GPGPU). Such chip can perform not only algorithms used in rendering of computer graphics but also almost every other algorithm that is runnable on a CPU. The main difference in comparison with CPU is that the CPU is optimized to minimize latency whereas GPU is optimized to maximize throughput. Latency is the time needed to start and finish the execution of a single instruction including time to load necessary data. On the other hand, throughput\label{throughput} is a number which means how many instructions can be processed per one time unit.~\cite{professional_cuda} Since some parts of EACirc process a lot of data with algorithms which does not need to be optimized for latency\footnote{An algorithm that needs to be optimized for latency in order to maximize performance is that one which has lots of edges in it's control flow graph.} the use of GPU's is suitable.
 
 Several different solutions exist on the market which can be used for GPGPU programming. Each solution provides different special features. The solution used for this thesis is called CUDA~\cite{about_cuda} and it is a proprietary technology developed by NVIDIA.~\cite{nvidia} The decision to use CUDA was taken by my advisor.
 
@@ -154,7 +154,7 @@ The dimensions of the grid should correspond to the dimensions of the computatio
 
 The execution of a single kernel is initiated as soon as the device has enough available resources to run a whole block.\footnote{Threads of the same block are running concurrently.}~\cite{cuda_guide} This constraint allows that the threads of one block can communicate with each other (see section \ref{memory_hiearchy}) and that the computational problem can be scaled across different types of CUDA GPUs that disposes with other hardware capabilities.\footnote{For instance the number of cores or available memory.}~\footnote{Any program scales if and only if a similar performance is achieved for arbitrary size of input data or across different hardware.~\cite{cuda_best_practices} It is recommended that any well optimized program for CUDA scales.} The execution order of the blocks is not defined.
 
-To fully utilize the device the size of the block should be multiple of a warp size\footnote{For current devices the warp size is 32 (see. section~\ref{cuda_architecture}).}. Each block is mapped to a single SM.\footnote{For definition of Streaming multiprocessor (SM) see~\ref{cuda_architecture}} On a single SM several blocks may be active but the exact number is dependant on the GPU hardware parameters. Depending of the number of SMs several block may be run in parallel. This is fully done automatically by the CUDA platform. However, the programmer should know these constraints to produce optimized code for each device.\footnote{For various optimization techniques for CUDA platform see~\cite{cuda_best_practices}}
+To fully utilize the device the size of the block should be multiple of a warp size\footnote{For current devices the warp size is 32 (see. section~\ref{cuda_architecture}).}. Each block is mapped to a single SM.\footnote{For definition of Streaming multiprocessor (SM) see~\ref{cuda_architecture}.} On a single SM several blocks may be active but the exact number is dependant on the GPU hardware parameters. Depending of the number of SMs several block may be run in parallel. This is fully done automatically by the CUDA platform. However, the programmer should know these constraints to produce optimized code for each device.\footnote{For various optimization techniques for CUDA platform see~\cite{cuda_best_practices}.}
 
 \section{Memory hierarchy}
 \label{memory_hiearchy}
@@ -275,7 +275,7 @@ Debugging of the device code is slightly different from debugging of the code fo
 
 \chapter{CMake}
 
-To set EACirc project for using CUDA, an intervention into the settings of the project was needed. Bellow the original settings and workflow of EACirc are described which, however,  had to be remade from scratch.
+To set EACirc project for using CUDA, an intervention into the settings of the project was needed. Below the original settings and workflow of EACirc are described. However, this settings had to be remade from scratch.
 
 The EACirc sources consist mainly of \emph{C} and \emph{C++} code. The code is divided into reasonably logical sections, but the overall structure and concept of the project are monolithic.\footnote{A monolithic binary is an executable that does not need any other dependencies or resources at a runtime. In other words, the binary is independent.} This leads to compilation of all sources into one big executable of approximately 9~MB, which takes some non-trivial time.
 
@@ -299,15 +299,15 @@ The remaining \texttt{ccmake} and \texttt{cmake-gui} are just more convenient wa
 
 \section{A closer look at the \texttt{cmake} executable}
 
-The \texttt{cmake} executable is not just a dummy build-system. The process of generating a makefile is quite sophisticated. First, the user chooses the \emph{source directory} and the \emph{build directory}. Then (s)he invokes the \texttt{cmake} command in a \emph{build directory} with appropriate parameters. The subsequent process consists of several phases -- selection of a native build-system (in a CMake terminology referenced as a \emph{generator}), configuration based on a user-specific input, and the generation of a makefile itself.\footnote{Note that the exact scheme of this process can differ according to which interface of CMake is used -- i.e. \texttt{cmake}, \texttt{ccmake}, or \texttt{cmake-gui}.}~\cite{cmake_docs}
+The \texttt{cmake} executable is not just a dummy build-system. The process of generating a makefile is quite sophisticated. First, the user chooses the \emph{source directory} and the \emph{build directory} and then invokes the \texttt{cmake} command in a \emph{build directory} with appropriate parameters. The subsequent process consists of several phases -- selection of a native build-system (in a CMake terminology referenced as a \emph{generator}), configuration based on a user-specific input, and the generation of a makefile itself.\footnote{Note that the exact scheme of this process can differ according to which interface of CMake is used -- i.e. \texttt{cmake}, \texttt{ccmake}, or \texttt{cmake-gui}.}~\cite{cmake_docs}
 
 The \emph{source directory} is simply a directory where the project sources are located as well as the top-level \texttt{CMakeLists.txt} file which is distributed with the sources. The build directory is an empty user-created directory in which the user wants the binaries to be build.
 
-The selection of the \emph{generator} depends on the user's platform, on the user-installed native build-systems, and on the user's intentions. The generator used on Linux is usually \texttt{make} or \texttt{ninja}. If the user wants to generate project files to a specific IDE, (s)he chooses the appropriate generator -- e.g. Visual Studio 2013~\cite{msvc} on Microsoft Windows~\cite{win}. Usually the selection of the appropriate generator is done by CMake automatically.
+The selection of the \emph{generator} depends on the user's platform, on the user-installed native build-systems, and on the user's intentions. The generator used on Linux is usually \texttt{make} or \texttt{ninja}. If the user wants to generate project files to a specific IDE, appropriate generator can be chosen -- e.g. Visual Studio 2013~\cite{msvc} on Microsoft Windows~\cite{win}. Usually the selection of the appropriate generator is done by CMake automatically.
 
 The subsequent phase is configuration. Here the user specifies variable options for the build that the project supports. For instance, some features of the application can be switched on/off or the location of a third party dependencies can be specified. Also the different build configuration can be switched, i.e. release or debug.
 
-If the configuration is all right then the makefile is successfully created in the \emph{build directory}. Then the user just invokes the appropriate tool to execute the makefile and the binaries are build.
+If the configuration is correct then the makefile is successfully created in the \emph{build directory}. Then the user just invokes the appropriate tool to execute the makefile and the binaries are build.
 
 It is worth mentioning that the makefile automatically detects any changes made in the \emph{source directory}. So the user invokes the \texttt{cmake} executable just once to generate the makefile or to change the variable options of the build. The makefile also provides a way to install the application and/or to test it.
 
@@ -340,9 +340,9 @@ There were several changes made to the EACirc repository structure. The new fold
 
 The first and also the smallest change was to name all source folders with only small letters. Next the libraries from 3rd party providers \texttt{catch}, \texttt{galib}, and \texttt{tinyXML} were moved into the separate folder -- the \emph{libs} directory.
 
-Then the so called \emph{projects} were isolated. A \emph{project} in EACirc terminology means a problem solving module. These \emph{projects} are \texttt{caesar}, \texttt{estream}, \texttt{sha3}, \texttt{files} and \texttt{pregenerated\_tv}. Since \texttt{files} and \texttt{pregenerated\_tv} are both just small modules consisting of only one source file, it would be impractical to isolated them. Whereas the big modules \texttt{caesar}, \texttt{estream}, and \texttt{sha3} were moved to the separate folder called the \emph{projects} folder. Each of the isolated projects was remade to compile into a static library.\footnote{There is a plan to remake the projects to modules loaded dynamically at runtime. This would require to compile them separately into the dynamic libraries.}
+Then the so called \emph{projects} were isolated. A \emph{project} in EACirc terminology means a problem solving module. These \emph{projects} are \texttt{caesar}, \texttt{estream}, \texttt{sha3}, \texttt{files} and \texttt{pregenerated\_tv}. Since \texttt{files} and \texttt{pregenerated\_tv} are both just small modules consisting of only one source file, it would be impractical to isolate them. Whereas the big modules \texttt{caesar}, \texttt{estream}, and \texttt{sha3} were moved to the separate folder called the \emph{projects} folder. Each of the isolated projects was remade to compile into a static library.\footnote{There is a plan to remake the projects to modules loaded dynamically at runtime. This would require to compile them separately into the dynamic libraries.}
 
-The content od folders \texttt{eacirc} and \texttt{oneclick} is build into executables which are named accordingly to their corresponding folder. The \emph{projects} which are now compiled into the static libraries are now statically linked to the \texttt{eacirc} executable representing the EACirc tool as a whole. The \texttt{oneclick} executable is a supportive tool for the automated task management developed by Ľubomír Obrátil.~\cite{oneclick}
+The content of folders \texttt{eacirc} and \texttt{oneclick} is build into executables which are named accordingly to their corresponding folder. The \emph{projects} which are now compiled into the static libraries are now statically linked to the \texttt{eacirc} executable representing the EACirc tool as a whole. The \texttt{oneclick} executable is a supportive tool for the automated task management developed by Ľubomír Obrátil.~\cite{oneclick}
 
 \section{The new build-system of EACirc}
 
@@ -357,7 +357,7 @@ The new build-system is written on the CMake platform. This platform allows to d
 	Enable building of the Estream project.
 	\item[\texttt{BUILD\_SHA3}] \hfill \\
 	Enable building of the SHA-3 project.
-	\item[\texttt{BUID\_CUDA}] \hfill \\
+	\item[\texttt{BUILD\_CUDA}] \hfill \\
 	Enable to build the support for CUDA devices. This option is available only if the CUDA Toolkit \cite{cuda_toolkit} is installed on the build machine\footnote{A build machine is a physical or a virtual machine that is used to build the project.} and found by the CMake.
 \end{description}
 
@@ -370,13 +370,12 @@ Since the \emph{projects} are build into static libraries they must be linked to
 	\end{center}
 	\caption{EAcirc dependency graph}
 	\label{fig:deps}
-	\small
-	The static libraries are shown in the rhombus. The executables have a house around them. The square represents an interface library.\footnote{Interface library does not need to be linked against. It consists only of header files.} The direction of the arrows represents that some build target depends on another one.
+	\caption*{The static libraries are shown in the rhombus. The executables have a house around them, squares represent interface libraries\footnote{Interface library does not need to be linked against. It consists only of header files.} and the direction of arrows describes dependency of build targets.}
 \end{figure}
 
 The build-system is also version aware. The current version is stored in the \texttt{eacirc/Version.h} header file. The version corresponds to git commit hash~\cite{git_book}. This means that for the correct build generation git tools must be properly installed on the build machine and found by CMake.\footnote{If git tools are installed and not found automatically by CMake then the path to git tools can be specified manually.}
 
-The use of CMake and the new options of building EACirc are explained in detail on the Github wiki project page under the Building EACirc section.
+The use of CMake and the new options of building EACirc is explained in detail on the Github wiki project page under the Building EACirc section.
 
 \section{Project settings for CUDA}
 
@@ -388,11 +387,11 @@ It is now much easier to set the project for CUDA support with CMake than with o
 
 \chapter{Gate Circuit of EACirc}
 
-The purpose of EACirc is to differentiate input data and a referential random data from one another without any context. The input data consist of several sample outputs from an arbitrary random generator. The distinction is done by creating a gate circuit which processes the input data and tells the result. The internal structure of the optimal gate circuit is unknown at the moment of invocation of the EACirc program. However, the optimal form of the circuit is constructed via a genetic algorithm.~\cite{ukrop_thesis}
+The purpose of EACirc is to differentiate input data and a referential random data from one another without any context. The input data consists of several sample outputs from an arbitrary random generator. The distinction is done by creating a gate circuit which processes the input data and outputs the result. The internal structure of the optimal gate circuit is unknown at the moment of invocation of the EACirc program. However, the optimal form of the circuit is constructed via a genetic algorithm.~\cite{ukrop_thesis}
 
 Genetic algorithms are inspired by processes of reproduction and natural selection in living systems. They are searching for a satisfactory optimal solution for a given problem. The process of producing the acceptable solution consists of creating a random initial generation of individuals and then iteratively applying evaluation of the generation, selection of the best individuals for the next generation, and creating next generation by applying genetic operators.~\cite{genetic_algorithms}
 
-The functionality of gate circuit is the same as an ordinary digital circuit that is composed from electronic components performing some logical function. The circuit takes a fixed width of input data and outputs if the input is random or not.\footnote{Actually the output of a circuit is not only a binary (random/non-random) but contains also several other informations that are further processed.} Since the gate circuit, in the context of EACirc, is stored in memory of a computer, the implementation differs from the real world.
+The functionality of the gate circuit in EACirc is the same as an ordinary digital circuit that is composed from electronic components each performing some logical function. The circuit takes a fixed amount of input data and outputs if the input is random or not.\footnote{Actually the output of a circuit is not only a binary (random/non-random) but contains also several other informations that are further processed.} Since the gate circuit, in the context of EACirc, is stored in memory of a computer, the implementation differs from the real world.
 
 %\todo{what is gate circuit}
 
