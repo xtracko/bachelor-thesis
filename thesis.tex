@@ -32,7 +32,7 @@
 \usepackage{subcaption} 
 
 \usepackage{tikz}
-\usetikzlibrary{trees,calc,shapes.arrows}
+\usetikzlibrary{trees, calc, shapes.arrows, shapes.geometric, shapes.multipart}
 
 \widowpenalty10000
 \clubpenalty10000
@@ -64,14 +64,20 @@
 		\DeclarationText
 		\AdvisorName
 	\end{ThesisDeclaration}
-	%\begin{ThesisThanks}
-		%TODO Thesis Thanks
-	%\end{ThesisThanks}
-	%\begin{ThesisAbstract}
+	\begin{ThesisThanks}
+		I thank CRoCS laboratory for provision of workspace and hardware resources to make this thesis happen. I would like to thank Petr Švenda for leading my work and Martin Ukrop for endurance to answering my numerous question about EACirc insides.
+		
+		\bigskip
+		
+		\noindent
+		Last but not least I would like to thank my family for continuous support and for a help with a language side of my bachelor thesis.
+	\end{ThesisThanks}
+	\begin{ThesisAbstract}
+		\todo{}
 		%TODO Thesis Abstract
-	%\end{ThesisAbstract}
+	\end{ThesisAbstract}
 	\begin{ThesisKeyWords}
-		acceleration, CUDA, CMake, GPU, GPUGPU, EACirc, software circuit, randomness testing
+		acceleration, CUDA, CMake, GPU, GPGPU, EACirc, software circuit, randomness testing
 	\end{ThesisKeyWords}
 	\tableofcontents
 
@@ -387,25 +393,61 @@ It is now much easier to set the project for CUDA support with CMake than with o
 
 \chapter{Gate Circuit of EACirc}
 
-The purpose of EACirc is to differentiate input data and a referential random data from one another without any context. The input data consists of several sample outputs from an arbitrary random generator. The distinction is done by creating a gate circuit which processes the input data and outputs the result. The internal structure of the optimal gate circuit is unknown at the moment of invocation of the EACirc program. However, the optimal form of the circuit is constructed via a genetic algorithm.~\cite{ukrop_thesis}
+The purpose of EACirc is to differentiate input data and a referential random data from one another without any context. The input data consists of thousands of sample outputs from an arbitrary random generator which are referred to as input vectors. The distinction is done by creating a gate circuit which processes the input data and outputs the result. The internal structure of the optimal gate circuit is unknown at the moment of invocation of the EACirc program. However, the optimal form of the circuit is constructed via a genetic algorithm.~\cite{ukrop_thesis}
 
 Genetic algorithms are inspired by processes of reproduction and natural selection in living systems. They are searching for a satisfactory optimal solution for a given problem. The process of producing the acceptable solution consists of creating a random initial generation of individuals and then iteratively applying evaluation of the generation, selection of the best individuals for the next generation, and creating next generation by applying genetic operators.~\cite{genetic_algorithms}
 
-The functionality of the gate circuit in EACirc is the same as an ordinary digital circuit that is composed from electronic components each performing some logical function. The circuit takes a fixed amount of input data and outputs if the input is random or not.\footnote{Actually the output of a circuit is not only a binary (random/non-random) but contains also several other informations that are further processed.} Since the gate circuit, in the context of EACirc, is stored in memory of a computer, the implementation differs from the real world.
+The functionality of the gate circuit in EACirc is the same as an ordinary digital circuit that is composed from electronic components and each of them is performing some logical function. The circuit takes one input vector, which is a fixed amount of logical data, and outputs if the input is random or not.\footnote{Actually the output of a circuit is not only a binary (random/non-random) but contains several other informations that are further processed.} Since the gate circuit, in the context of EACirc, is stored in memory of a computer, the implementation differs from the real world.
 
-%\todo{what is gate circuit}
+Producing the final gate circuit via genetic algorithm is an iterative process. In each iteration a whole generation of circuits must be evaluated. The evaluation of a single circuit is done by processing all of the input vectors. All of these parts of the process must be done in big quantities to ensure quality and that is a computationally intensive task. Fortunately, the evaluation of a single circuit and even the evaluation of the whole generation can be run effectively in parallel. This thesis focuses mainly on parallelization of evaluation of a single circuit.
 
-%\todo{why is gate circuit suitable for GPGPU}
+The evaluation of a single circuit is suitable for parallelization, particularly for data parallelism on GPGPU and CUDA platform. The size of the input data is relatively small (usually 16~KiB or more)\footnote{The exact parameters of the circuit are runtime variables. The reported values in parenthesis are just the most used but if running on CUDA, bigger values are expected.} The input data are a set of input vectors (usually 1000 vectors). Each input vector is evaluated separately by the same circuit, which usually outputs only 1~byte of data. Therefore, the data transfers between host and device via a \emph{slow} PCIe bus will be small.\footnote{The PCIe bus has got a big latency, thus the number of transfers must be minimized or the transfers must be buffered.} The data parallelism can be achieved by mapping of execution of single input data to separate device thread. Single circuit processes different data equally, i.e. the data are different but the execution paths of multiple running circuits are same.
 
 
-\section{Functional specification}
+\section{CPU representation of hardware circuit}
+
+The gate circuit is a Petri net from informatics point of view. 
+
+
+The gate circuit is represented as an array of 32-bit unsigned integers. Each integer has its own meaning.
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[scale=2]{figures/circuit-dimensions.png}
+	\caption{The dimensions of the gate circuit}
+\end{figure}
+
+
+\begin{tikzpicture}
+	\foreach \s in {0,...,5}
+	{
+		\node[draw, circle] (in\s) at (1.5 * \s,0) {IN \s};
+	}
+	
+	\node[draw, ellipse, minimum width=70pt] (xor) at (1,-2) {XOR};
+	\node[draw, ellipse, minimum width=70pt] (cycl) at (4,-2) {CYCL};
+	\node[draw, ellipse, minimum width=70pt] (rotl) at (7,-2) {ROTL};
+	
+	\node[draw, ellipse, minimum width=70pt] (nand) at (1,-4) {NAND};
+	\node[draw, ellipse, minimum width=70pt] (leq) at (4,-4) {LEQ};
+	\node[draw, ellipse, minimum width=70pt] (lt) at (7,-4) {LT};
+	
+	\node[draw, ellipse, minimum width=70pt] (nop) at (1,-6) {NOP};
+	\node[draw, ellipse, minimum width=70pt] (and) at (4,-6) {AND};
+	
+	\node[draw, circle] (out0) at (0,-8) {OUT 0};
+	\node[draw, circle] (out1) at (2,-8) {\begin{tabular}{c} OUT \\ 1 \end{tabular}};
+	
+	\draw[-,draw=blue] (in0) to (xor);
+\end{tikzpicture}
+
 \section{GPU implementation}
 
 
 
 
 
-%\chapter{Conclusions and future work}
+\chapter{Conclusions and future work}
 
 
 
