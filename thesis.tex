@@ -97,6 +97,9 @@ Since the performance of GPGPU is dependable on the used hardware the achieved s
 
 To set EACirc project for using CUDA, a non-trivial intervention into the settings of the project was needed. If the original settings of EACirc had been applied then this intervention would have resulted into a chaotic and further unmaintainable project. Therefore, in addition to the primary objective of this thesis to speed-up EACirc, the secondary objective is to remade the settings completely from scratch in order to prevent the problems that emerged by using CUDA. For this purpose an open-source tool CMake~\cite{cmake} was used that was developed by Kitware corporation~\cite{kitware}.
 
+\bigskip
+\todo{The typeseting used for this thesis}
+
 
 
 
@@ -142,6 +145,7 @@ In CUDA terminology the control units are called \emph{Streaming Multiprocessors
 
 
 \section{Thread hierarchy}
+\label{thread_hierarchy}
 
 The SIMT architecture of GPU is well suited and designed for computational problems that can be optimized using data parallelism.~\cite{professional_cuda} Data parallelism is a parallelization technique that divides the input data to the independent parts and executes them separately (but evenly) on parallel computing nodes. The final result is then composed from each sub-result.~\cite{data_parallel_algorithms} CUDA platform supports this technique through kernels and thread hierarchy.
 
@@ -463,7 +467,10 @@ The circuit interpreter is responsible for executing the circuit. The interprete
 
 The GPU implementation source files of the gate circuit is placed in the directory \texttt{eacirc/circuit/gpu\_gate}. The sources are written mainly in \emph{CUDA~C++}\footnote{For the description of \emph{CUDA~C++} language see section~\ref{cuda_lang}} or \emph{C++} programming language using the standard \emph{C++11}.~\cite{std_c++11, cuda_guide} The GPU implementation provides proper interface for communication with the rest of the program. The GPU circuit representation and interpreter is written using \emph{C++} templates~\cite{std_c++11} in order to provide multiple sizes of connector and function masks and thus larger circuits.
 
+The GPU implementation is written with the idea of running the code on GPU and on CPU too. The GPU support is primary. Running the code on CPU should by possible after minimal intervention into the EACirc source codes.\footnote{Running the code on CPU has not been tested yet, but should be possible to do so.} The reason to make new implementation that is capable running on GPU and CPU is to maintain only one implementation that is runnable on every machine and to provide GPU acceleration if the machine hardware supports it.
+
 \subsection{Circuit representation}
+\label{gpu_curcuit_repr}
 
 The GPU implementation can not use the storage layout of the circuit as the CPU version described in section~\ref{cpu_implementation}, because of the CUDA memory restriction for faster data access.
 
@@ -500,8 +507,54 @@ The \texttt{node} class represents circuit nodes that have its own function and 
 
 The template class \texttt{gate\_helper} is responsible for conversion between CPU and GPU representation of the circuit. The conversion is performed on CPU before the circuit definition is send to device and executed. The gate helper also transfers the relative connectors to absolute connectors, because the GPU interpreter works only with absolute connectors.
 
-\subsection{Interpreter and kernel}
-\subsection{Dispatching and grid configuration}
+\subsection{Interpreter}
+
+The GPU circuit interpreter is contained in template class \texttt{gate\_interpreter}. This class is capable of executing the circuit on GPU and CPU. The reason, this class is written as template, is to support different types of circuits (see~\ref{gpu_curcuit_repr}). One invocation of circuit interpreter processes only one input vector.
+
+The GPU interpreter processes the data similarly as the CPU -- one circuit layer after another. The state of the execution is maintained per instance basis thus for concurrent execution, multiple instances must be created. The inputs and outputs from currently processed layer are stored in memory that is allocated outside the class scope. Therefore, different storage spaces may be used when running interpreter on CPU and GPU. The input and output vectors are passed through pointer for each circuit execution.
+
+\subsection{Kernel}
+
+The kernel function\footnote{For definition of kernel see section~\ref{thread_hierarchy}.} accepts necessary parameters to run the circuit on GPU such as pointer to the storage of circuit inputs and outputs, the circuit definition, and the size of the device's shared memory bank\footnote{For description of shared memory bank see section~\ref{memory_hiearchy}.}. The listing~\ref{listing:kernel} shows the code.
+
+The kernel computes its ID and the exact position of input and output vectors in the global memory which the kernel is supposed to process. Then the kernel allocates the space for interpreter layers in a shared memory for the fastest data access. The reason to use shared memory over registers is that the size of shared memory may be specified at runtime during kernel launch. The size of registers must be known at the compilation time. Since the size of circuit layer is not know at compile time, the shared memory is used for the input and outputs of currently processed layer.
+
+The allocation is done by the CUDA platform automatically when the execution of the block starts. Since the shared memory is own to a whole block, each kernel must appropriate a space for its own execution layers. However, each thread of the warp accesses the data in shared memory at different addresses simultaneously and the bank conflict\footnote{For description of bank conflict see~\ref{memory_hiearchy}.} can emerge. The bank conflicts are prevented using a technique called striding. The technique embodies in allocating an extra space for each thread. The size of the extra space is equal to the bank size and is never accessed, thus each thread of the warp access different bank every time.
+
+\begin{listing}[h]
+	\begin{minted}[autogobble, linenos, frame=single, xleftmargin=2em]{cuda}	
+	template <class T>
+	__global__ void kernel(const byte* ins, byte* outs,
+	                       const gate_circuit<T> circuit,
+	                       const size_t bank_size)
+	{
+		const int id = blockIdx.x * blockDim.x + threadIdx.x;
+		
+		const byte* in = ins + (id * circuit.in_size);
+		byte* out = outs + (id * circuit.out_size);
+		
+		
+		extern __shared__ byte memory[];
+		
+		byte* layers =
+		         memory + ((2 * circuit.in_size + bank_size) * threadIdx.x);
+		
+		gate_interpreter<T> interpreter(layers, &circuit);
+		interpreter.execute(in, out);
+	}
+	\end{minted}
+	\caption{The interpreter kernel}
+	\label{listing:kernel}
+\end{listing}
+
+\subsection{Job dispatching}
+
+A class called \texttt{gpu\_task} was created. This class is responsible for launching the kernel, managing device memory and coping the data from CPU and GPU. It uses host page locked memory~\cite{cuda_guide} for faster data transfers between the host and the device. The number of launched kernel threads is:
+
+\mint[frame=none]{cpp}{std::ceil( float( vec_count ) / block_size ) * block_size}
+
+\noindent
+The \texttt{block\_size} is 128 and \texttt{vec\_count} is the number of input vectors of EACirc.
 
 \chapter{Conclusions and future work}
 
