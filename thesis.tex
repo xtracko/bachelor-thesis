@@ -202,6 +202,7 @@ Since most of these actions are input/output operations, they may be performed e
 As producing an optimized code for CUDA devices is closely linked to their hardware parameters~\cite{cuda_best_practices} and because with almost every new product line of NVIDIA GPUs new features are introduced, NVIDIA established a system for backward and forward compatibility. The GPUs were divided to the classes reflecting technical parameters and runtime features of CUDA platform. These classes are referred to as compute capabilities.\footnote{For full list of compute capabilities corresponding to the date of release of this thesis see CUDA~C~Programming~Guide \cite{cuda_guide} section G.~Compute~Capabilities}.
 
 \section{Programming language}
+\label{cuda_lang}
 
 The main programming languages for CUDA are \emph{C} and \emph{C++} which are enriched by several CUDA specific keywords. Since \emph{C++} is a high-level language, some \emph{C++} features are not supported in the device code. The source code for the device and for the host may be mixed together and placed into one source file jointly.~\cite{cuda_guide}
 
@@ -408,23 +409,31 @@ The evaluation of a single circuit is suitable for parallelization, particularly
 
 Follows the description of the CPU implementation and functionality of the gate circuit designed by Martin Ukrop.~\cite{ukrop_thesis} This representation served as starting artwork for the GPU implementation.
 
-From informatics point of view the gate circuit can be described as directed acyclic graph (DAG) with some other restrictions described further. Each node represents some logical function (\emph{gate}), the edges (\emph{connectors}) of the vertices represents inputs for the individual logical functions and the flow of data. The graph is divided into several layers. Every node in each layer is connected only to nodes which belongs to the previous layer. For an illustration of the circuit see figure~\ref{fig:gate_circuit}.
+From informatics point of view the gate circuit can be described as directed acyclic graph (DAG) with some other restrictions described further. Each node represents some logical function (\emph{gate}), the edges (\emph{connectors}) of the vertices represents inputs for the individual logical functions and the flow of data. The graph is divided into several layers. Every node in each layer is connected only to nodes which belongs to the previous layer. For an illustration of the circuit see figure~\ref{fig:gate_circuit}.~\cite{eacirc_circuit}
 
 \begin{figure}[h]
 	\centering
 	\includegraphics[width=0.8\textwidth]{figures/gate_circuit.pdf}
 	\caption{The dimensions of the gate circuit}
+	\caption*{The gates are in blue, the connectors are the black lines. The yellow, green, and red nodes shows mapping of data to the gates. The flow of the data is from top to bottom.}
 	\label{fig:gate_circuit}
 \end{figure}
 
-\todo{use memory}
+\subsection{Use memory feature}
 
-\todo{size of layers}
+The gate circuit has a special feature of using a memory. It allows to process larger input vectors than is the maximal width of the circuit input (see figure~\ref{fig:gate_circuit} and \texttt{size\_of\_input}). The input vector is divided into several parts of size \texttt{size\_of\_input} and each part is processed sequentially. A part of output (\texttt{size\_of\_memory}) from current run of the circuit is transfused to the input of the next run (see figure~\ref{fig:gate_circuit} and the yellow nodes). If this feature is not used then the \texttt{size\_of\_memory} is equal to~$0$. Unfortunately the feature of using a memory was newer used in production and thus in GPU version of the circuit is not implemented.
+
+\subsection{Circuit dimensions}
+
+The circuit dimensions (see figure~\ref{fig:gate_circuit}) are loaded at the EACirc invocation from settings and are fixed for the whole runtime of the program. The circuit has got \texttt{num\_of\_layers} layers. All layers except the last one have \texttt{size\_of\_layer} nodes. The last layer has \texttt{size\_of\_output\_layer} nodes. Each node has got maximum number of allowed connectors.
 
 
 \section{CPU implementation}
+\label{cpu_implementation}
 
-In computer memory the gate circuit is represented as an 1-dimensional array of 32-bit unsigned integers. Each integer has its own meaning. The array is alternately divided into connection layers and function layers as shown in the figure~\ref{fig:circuit_cpu_array}. Each layer is aligned to multiple of $genome\_width$.
+The understanding of CPU implementation of the circuit by Martin Ukrop~\cite{ukrop_thesis} is necessary to provide a bridge interface to the GPU implementation and to preserve functionality.
+
+In computer memory the gate circuit is represented as an 1-dimensional array of 32-bit unsigned integers. Each integer has its own meaning. The array is alternately divided into connection layers and function layers as shown in the figure~\ref{fig:circuit_cpu_array}. Each layer is aligned to multiple of \texttt{genome\_width}.
 
 \begin{figure}[h]
 	\centering
@@ -439,22 +448,60 @@ The connection layers contains connectors masks which are represented as 32-bit 
 
 Relative connector is a representation of a connection which is defined through relative positioning to the node it belongs to. This representation is used in genetic algorithm when creating new generation, i.e. if the circuit is cut in half and crossed with another individual\footnote{Crossing of individuals is one of the types of genetic operators used for creating a new generation of individuals.} the connector remains still valid.
 
-Absolute connector is an representation of a connection by absolute positioning. This positioning is used when the circuit is being executed because then the process of resolving the absolute connector is much faster then resolving the relative connector.
+Absolute connector is a representation of a connection by absolute positioning. This positioning is used when the circuit is being executed because then the process of resolving the absolute connector is much faster then resolving the relative connector.
 
 \subsection{Function layers}
 
-The function layers contains function masks which are represented as 32-bit unsigned integers. Every node has assigned its own function mask. The mask contains information about the function type and arguments.
+The function layers contains function masks which are represented as 32-bit unsigned integers. Every node has assigned its own function mask. The mask contains information about the function type and arguments. For the list of possible function types see EACirc wiki section Gate circuits.~\cite{eacirc_circuit}
 
 \subsection{Circuit interpreter}
 
-\todo{}
+The circuit interpreter is responsible for executing the circuit. The interpreter processes each layer of the circuit sequentially. The CPU version uses dynamic memory allocation for the inputs and outputs for the currently processed layer. Each invocation of the CPU circuit interpreter on the same circuit (the same circuit is invoked thousand times and more) converts the relative connectors to the absolute connectors. This is a major performance drawback and it could be done only once for each circuit to speed the execution.
 
 
 \section{GPU implementation}
 
+The GPU implementation source files of the gate circuit is placed in the directory \texttt{eacirc/circuit/gpu\_gate}. The sources are written mainly in \emph{CUDA~C++}\footnote{For the description of \emph{CUDA~C++} language see section~\ref{cuda_lang}} or \emph{C++} programming language using the standard \emph{C++11}.~\cite{std_c++11, cuda_guide} The GPU implementation provides proper interface for communication with the rest of the program. The GPU circuit representation and interpreter is written using \emph{C++} templates~\cite{std_c++11} in order to provide multiple sizes of connector and function masks and thus larger circuits.
+
+\subsection{Circuit representation}
+
+The GPU implementation can not use the storage layout of the circuit as the CPU version described in section~\ref{cpu_implementation}, because of the CUDA memory restriction for faster data access.
+
+The circuit is stored as 1-dimensional array of instances of \emph{C++} template class \texttt{gate\_circuit::node} in a \emph{constant memory} of the device. The nodes are stored similarly as layers in CPU implementation using alignment (see figure~\ref{fig:gpu_genome}).
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=\textwidth]{figures/gpu_genome.pdf}
+	\caption{The gate circuit stored in GPU constant memory}
+	\label{fig:gpu_genome}
+\end{figure}
 
 
+The \texttt{node} class represents circuit nodes that have its own function and connector masks. The reason of this data layout is to use coalesced memory access for faster data transfers and to better use the caching capabilities of GPU\footnote{For coalesced access and caching see section~\ref{memory_hiearchy}.} Besides the whole node always resides in one cache line thus only one transaction to load data from constant memory is used. The listing~\ref{listing:gpu_node} shows the basic structure of the node using \emph{C++} code.
 
+\begin{listing}[h]
+	\begin{minted}[autogobble, linenos, frame=single, xleftmargin=2em]{cpp}
+	template <typename T>
+	class gate_circuit {
+	public:
+		using value_type = T;
+		
+		class node {
+			value_type _func_mask;
+			value_type _conn_mask;
+		};	
+	};
+	\end{minted}
+	\caption{The GPU representation of circuit node}
+	\label{listing:gpu_node}
+\end{listing}
+
+\subsection{Converting between CPU and GPU representation}
+
+The template class \texttt{gate\_helper} is responsible for conversion between CPU and GPU representation of the circuit. The conversion is performed on CPU before the circuit definition is send to device and executed. The gate helper also transfers the relative connectors to absolute connectors, because the GPU interpreter works only with absolute connectors.
+
+\subsection{Interpreter and kernel}
+\subsection{Dispatching and grid configuration}
 
 \chapter{Conclusions and future work}
 
