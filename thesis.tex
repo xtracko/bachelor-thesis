@@ -71,7 +71,7 @@
 		Last but not least, I would like to thank my family for continuous support and for help with language aspects of my bachelor thesis.
 	\end{ThesisThanks}
 	\begin{ThesisAbstract}
-		The main focus of this thesis is to bring support for GPU acceleration into EACirc project in order to speed-up the most computationally demanding part. The chosen part is implemented using GPGPU and the achieved speed-up is measured. The thesis also elaborates in build task automation and refactoring of the basic project structure.
+		The main objective of this thesis is to bring support for GPU acceleration into EACirc project in order to speed-up the most computationally demanding part. The chosen part is implemented using GPGPU and the achieved speed-up is measured. The thesis also elaborates in build task automation and refactoring of the basic project structure.
 	\end{ThesisAbstract}
 	\begin{ThesisKeyWords}
 		acceleration, CUDA programming, optimization, build configuration, GPU, GPGPU, EACirc, software circuit, randomness testing
@@ -96,7 +96,7 @@ To set EACirc project for using CUDA, a non-trivial intervention into the settin
 
 \bigskip
 
-The text of this thesis was typeset in \LaTeX{} using \textit{fithesis2} package created by Stanislav Filipčík~\cite{fithesis}. The codes fragments which appears in text are typeset using \LaTeX{} package \textit{minted}~\cite{minted} in version 2.0.
+The text of this thesis was typeset in \LaTeX{} using \textit{fithesis2} package created by Stanislav Filipčík~\cite{fithesis}. The codes fragments which appear in the thesis text were typeset using \LaTeX{} package called \textit{minted}~\cite{minted}, version 2.0.
 
 
 
@@ -206,7 +206,7 @@ As producing an optimized code for CUDA devices is closely linked to their hardw
 \section{Programming language}
 \label{cuda_lang}
 
-The main programming languages for CUDA are \emph{C} and \emph{C++} which are enriched by several CUDA specific keywords. Since \emph{C++} is a high-level language, some \emph{C++} features are not supported in the device code. The source code for the device and for the host may be mixed together and placed into one source file jointly.~\cite{cuda_guide}
+The main programming languages for CUDA are C and C++ which are enriched by several CUDA specific keywords. Since C++ is a high-level language, some C++ features are not supported in the device code. The source code for the device and for the host may be mixed together and placed into one source file jointly.~\cite{cuda_guide}
 
 The listing \ref{listing:cuda_example} shows a sample of CUDA code which produces a sum of two vectors on the device. The sample follows the scenario of launching the kernel as described in section \ref{heterogeneous_programming}.
 
@@ -272,7 +272,7 @@ However, one caution should be remembered before porting an algorithm to the CUD
 
 \section{Tools}
 
-NVIDIA provides the necessary tools for the development on CUDA platform through CUDA Toolkit package.~\cite{cuda_toolkit} The source files of CUDA programs must be compiled by a special compiler. The compiler that comes with the CUDA Toolkit is called \texttt{nvcc}.~\cite{cuda_compiler} The compiler supports mixing the code for the host with the code for the device. The \texttt{nvcc} identifies the code for the device and compiles it to an intermediate object file. The remaining code for the host is then forwarded to the ordinary compiler for \emph{C/C++} like \texttt{gcc}, \texttt{clang}, or \texttt{cl}. The object files from the \texttt{nvcc} and the host compiler are then linked into the binary form using ordinary linker or by \texttt{nvcc}. Therefore, the formed binary includes both the code for the host and for the device.
+NVIDIA provides the necessary tools for the development on CUDA platform through CUDA Toolkit package.~\cite{cuda_toolkit} The source files of CUDA programs must be compiled by a special compiler. The compiler that comes with the CUDA Toolkit is called \texttt{nvcc}.~\cite{cuda_compiler} The compiler supports mixing the code for the host with the code for the device. The \texttt{nvcc} identifies the code for the device and compiles it to an intermediate object file. The remaining code for the host is then forwarded to the ordinary compiler for C/C++ like \texttt{gcc}, \texttt{clang}, or \texttt{cl}. The object files from the \texttt{nvcc} and the host compiler are then linked into the binary form using ordinary linker or by \texttt{nvcc}. Therefore, the formed binary includes both the code for the host and for the device.
 
 Debugging of the device code is slightly different from debugging of the code for the host. It requires a special debugger. The one that comes with CUDA Toolkit is called \texttt{cuda-gdb}.~\cite{cuda_gdb} The interface of this tool is almost the same as the interface of the known Linux compiler \texttt{gdb}.
 
@@ -286,7 +286,7 @@ Debugging of the device code is slightly different from debugging of the code fo
 
 To set EACirc project for using CUDA, an intervention into the settings of the project was needed. Below the original settings and workflow of EACirc are described. However, this settings had to be remade from scratch.
 
-The EACirc sources consist mainly of \emph{C} and \emph{C++} code. The code is divided into reasonably logical sections, but the overall structure and concept of the project are monolithic\footnote{A monolithic binary is an executable that does not need any other dependencies or resources at a runtime. In other words, the binary is independent.}. This leads to compilation of all sources into one big executable of approximately 9~MB, which takes some non-trivial time.
+The EACirc sources consist mainly of C and C++ code. The code is divided into reasonably logical sections, but the overall structure and concept of the project are monolithic\footnote{A monolithic binary is an executable that does not need any other dependencies or resources at a runtime. In other words, the binary is independent.}. This leads to compilation of all sources into one big executable of approximately 9~MB, which takes some non-trivial time.
 
 On top of this EACirc is developed as a cross-platform application. To provide native builds for each supported platform (Windows~\cite{win} and Linux) a special makefile or an IDE specific project file are used simultaneously. They describe how to build the application. When a change in the build is introduced, e.g. a new source file is added, the change has to be manually implemented to all makefiles to provide consistency. This workflow is not easy to maintain as the violation of these rules can cause an uncomfortable pitfall.
 
@@ -296,7 +296,7 @@ Although there are many similar tools as CMake and some of them provide better f
 
 \section{CMake toolset}
 
-The CMake is actually a set of several tools that provide for building, testing, and deploying of user's \emph{C} or \emph{C++} project. These tools can be installed on Linux, Windows, or MacOSX. The CMake toolkit consists of the main tool \texttt{cmake} and the supportive \texttt{ccmake} (or \texttt{cmake-gui}), \texttt{ctest}, and \texttt{cpack}.~\cite{cmake_docs}
+The CMake is actually a set of several tools that provide for building, testing, and deploying of user's C or C++ project. These tools can be installed on Linux, Windows, or MacOSX. The CMake toolkit consists of the main tool \texttt{cmake} and the supportive \texttt{ccmake} (or \texttt{cmake-gui}), \texttt{ctest}, and \texttt{cpack}.~\cite{cmake_docs}
 
 The \texttt{cmake} tool takes a configuration file called \texttt{CMakeLists.txt} distributed with the project source files and generates the platform specific makefiles as an output. Then the user invokes a platform specific tool for building -- usually \texttt{make}, \texttt{ninja}~\cite{ninja}, or \texttt{MSBuild}.~\cite{msbuild} If the process is successful the native binaries of the project are now made.
 
@@ -463,7 +463,7 @@ The circuit interpreter is responsible for executing the circuit. The interprete
 
 \section{GPU implementation}
 
-The GPU implementation source files of the gate circuit is placed in the directory \texttt{eacirc/circuit/gpu\_gate}. The sources are written mainly in \emph{CUDA~C++}\footnote{For the description of \emph{CUDA~C++} language see section~\ref{cuda_lang}} or \emph{C++} programming language using the standard \emph{C++11}.~\cite{std_c++11, cuda_guide} The GPU implementation provides the proper interface for communication with the rest of the program. The GPU circuit representation and the interpreter are written using \emph{C++} templates~\cite{std_c++11} in order to provide multiple sizes of connector and function masks and thus larger circuits.
+The GPU implementation source files of the gate circuit is placed in the directory \texttt{eacirc/circuit/gpu\_gate}. The sources are written mainly in CUDA~C++\footnote{For the description of CUDA~C++ language see section~\ref{cuda_lang}} or C++ programming language using the standard \emph{C++11}.~\cite{std_c++11, cuda_guide} The GPU implementation provides the proper interface for communication with the rest of the program. The GPU circuit representation and the interpreter are written using C++ templates~\cite{std_c++11} in order to provide multiple sizes of connector and function masks and thus larger circuits.
 
 The GPU implementation is written with the idea of running the code on GPU and on CPU, too. The GPU support is the primary one. Running the code on CPU should by possible after a minimal intervention into the EACirc source codes.\footnote{Running the code on CPU has not been tested yet, but should be possible.} The reason to make the new implementation capable running on GPU and CPU is to maintain only one implementation that is runnable on every machine and provides GPU acceleration if the machine hardware supports it.
 
@@ -472,7 +472,7 @@ The GPU implementation is written with the idea of running the code on GPU and o
 
 The GPU implementation cannot use the storage layout of the circuit as the CPU version described in section~\ref{cpu_implementation}, because of the CUDA memory restriction for faster data access.
 
-The circuit is stored as 1-dimensional array of instances of \emph{C++} template class \texttt{gate\_circuit::node} in a \emph{constant memory} of the device. The nodes are stored similarly as layers in CPU implementation using alignment (see figure~\ref{fig:gpu_genome}).
+The circuit is stored as 1-dimensional array of instances of C++ template class \texttt{gate\_circuit::node} in a \emph{constant memory} of the device. The nodes are stored similarly as layers in CPU implementation using alignment (see figure~\ref{fig:gpu_genome}).
 
 \begin{figure}[h]
 	\centering
@@ -482,7 +482,7 @@ The circuit is stored as 1-dimensional array of instances of \emph{C++} template
 \end{figure}
 
 
-The \texttt{node} class represents circuit nodes that have its own function and connector masks. The reasons of this data layout are to use coalesced memory access for faster data transfers and to better use the caching capabilities of GPU.\footnote{For coalesced access and caching see section~\ref{memory_hiearchy}.} The whole node always resides in one cache line and therefore, only one transaction to load data from constant memory is used. The listing~\ref{listing:gpu_node} shows the basic structure of the node using \emph{C++} code.
+The \texttt{node} class represents circuit nodes that have its own function and connector masks. The reasons of this data layout are to use coalesced memory access for faster data transfers and to better use the caching capabilities of GPU.\footnote{For coalesced access and caching see section~\ref{memory_hiearchy}.} The whole node always resides in one cache line and therefore, only one transaction to load data from constant memory is used. The listing~\ref{listing:gpu_node} shows the basic structure of the node using C++ code.
 
 \begin{listing}[h]
 	\begin{minted}[autogobble, linenos, frame=single, xleftmargin=2em]{cpp}
@@ -561,37 +561,37 @@ The \texttt{block\_size} is 128 and \texttt{vec\_count} is the number of input v
 
 \chapter{Conclusions and future work}
 
-The process of automated building of the EACirc project from the source files was unified across multiple platforms. For this purpose a CMake tool was added to the project dependencies. Despite the added dependency, maintaining the project is now easier. The CMake tool prevents code duplication which had been an issue. In the process of integrating CMake into the project, refactoring of the basic structure of EACirc was made in order to improve compilation time and to introduce conditional building of distinct parts of EACirc.
+The automated building of the EACirc project from the source files was unified across multiple platforms. For this purpose a CMake tool was added to the project dependencies. Despite the added dependency the project is now easier to be maintained. The previous automated build system suffered from code duplication, which is now solved through the CMake tool. During the CMake integration into the project the basic structure of EACirc was refactored in order to improve the compilation time and to introduce conditional building of distinct parts of EACirc.
 
-After the apparent testing the new build system was integrated into the EACirc developer branch \texttt{eacirc-dev} in the project repository located at GitHub page. The new build system is now used by every EACirc developer.
+After the new build system had been properly tested, it was integrated into the EACirc development branch \texttt{eacirc-dev} of the project repository located on GitHub. The new build system is now being used by every EACirc developer.
 
 \bigskip
 
-The EACirc program now supports running GPU accelerated computations using CUDA platform in order to speed-up the program execution. The support for GPU acceleration may be turned on/off during the project compilation time.
+Now the EACirc program supports GPU accelerated computations using CUDA platform in order to speed-up the program execution. The support of the GPU acceleration may be turned on/off during the project compilation time.
 
-Since the GPU acceleration of an computation is beneficial only if the computation fulfils certain criteria, the most suitable part of EACirc was chosen for that purpose. The chosen part is execution of software circuit which is run independently in large quantities and thus it can be optimized by use of data parallelism.
+Since the GPU acceleration of an computation is beneficial only if the computation fulfils certain criteria, the most suitable part of EACirc was chosen to be accelerated. The chosen part represents the execution of the software circuit. The circuit is run independently and repeatedly in large quantities, which allows to optimize it by using data parallelism required for GPGPU.
 
-The original CPU version of the circuit implementation served as a starting point for the new GPU accelerated implementation that was created as a goal of this thesis. Some unused features of the CPU version was not implemented in the created GPU implementation but the basic functionality of the circuit remained unchanged. 
+The original CPU version of the circuit served as a starting point for the newly created implementation of the circuit that is runnable on GPU in line with the goal of this thesis. Some unused features of the CPU version were not implemented into the created GPU version. However, the basic functionality of the circuit remained unchanged. 
 
-Despite of the original goal to make second implementation of the circuit, which is runnable only on GPU, the created implementation should be capable of running on CPU, too. This statement was newer tested to be true but after a minor code adjustments it should be possible.
+The original goal of this thesis was to develop another implementation of the circuit which would be runnable only on GPU. In addition to this, the created implementation should be capable of running not only on GPU but on CPU, too. This additional feature will be possible after a minor code adjustments. It is worth to do so, because it will solve the current issue of code duplication of the circuit.
 
-The created GPU implementation of the circuit execution was validated via integration testing. The tests that were made did not detected any severe errors.
+The created implementation of the circuit execution was validated via integration testing. The tests that were made did not detected any severe errors.
  
 \bigskip
 \todo{results of speed-up and the hardware of machines used for benchmarking}
 \bigskip
 
-The GPU implementation of the circuit is now awaiting to be added into the EACirc developer branch \texttt{eacirc-dev} in the project repository located at GitHub page to be used by most of the EACirc users.
+The GPU implementation of the circuit is expected to be integrated into the EACirc development branch \texttt{eacirc-dev} of the project repository located on GitHub and to be used by most of the EACirc users.
 
 \section{Future work}
 
-As for future work regarding speeding-up the EACirc project using parallelism several themes are offering to. These themes are sorted according its difficultness as they appear in text.
+There are several options how to focus future work in the field of speeding-up the EACirc project using parallelism. These options are mentioned below in an ascending order based on their complexity.
 
-The most trivial one is multi-device execution of the created circuit. It would bring the possibility of processing even larger amount of data on machines that are equipped with multiple CUDA capable GPUs. However, this solution would pay off only if was enough data to process in order to harness the power of SIMT architecture of the devices.
+The most trivial option is a multi-device execution of the created circuit. It would bring the possibility of processing even larger amount of data on machines that are equipped with multiple CUDA capable GPUs. However, this solution would pay off only if enough data are available to be processed in order to harness the power of SIMT architecture of the devices.
 
-The next theme is to work off the GPU implementation of the circuit to be runnable on CPU in order to provide only one implementation of the circuit and to prevent code duplication. To achieve this it requires to adapt the CUDA code to be compiled with regular C++ compiler and to implement a CPU job dispatcher. This dispatcher could utilize the today multi-core CPU by running the execution of the circuit in parallel.
+The next option is to work on the GPU implementation of the circuit to be runnable on CPU. This will lead to only one implementation of the circuit in project source files, which will prevent code duplication. To achieve this, the CUDA code must be adjusted so that it can be build via regular C++ compiler, and also a CPU job dispatcher must be implemented. This dispatcher could use the current multi-core CPU and run the execution of the circuit in parallel.
 
-The last but not least theme is evaluation of the circuit on CPU while the circuit is executed on GPU simultaneously. This requires large intervention into the project design and program execution.
+The last but not least option is the evaluation of the circuit on CPU while another circuit is executed on GPU simultaneously. This would require a large intervention into the project design and the program execution path.
 
 
 
