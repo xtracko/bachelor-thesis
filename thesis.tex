@@ -18,7 +18,7 @@
 \usepackage[plainpages=false, pdfpagelabels, unicode]{hyperref}
 
 \usepackage{enumitem}
-\usepackage{microtype}
+\usepackage[final]{microtype}
 \usepackage[top=3.5cm, bottom=4cm, left=3cm, right=3cm]{geometry}	% pc version
 %\usepackage[top=3.5cm, bottom=4cm, left=3.5cm, right=2.5cm]{geometry}	% print version
 
@@ -51,10 +51,8 @@
 
 
 \newcommand{\todo}{
-	%\bigskip
 	\noindent
 	{\large\color{red}\textbf{TODO}}
-	%\bigskip
 }
 
 \begin{document}
@@ -73,11 +71,10 @@
 		Last but not least, I would like to thank my family for continuous support and for help with language aspects of my bachelor thesis.
 	\end{ThesisThanks}
 	\begin{ThesisAbstract}
-		\todo{}
-		%TODO Thesis Abstract
+		The main focus of this thesis is to bring support for GPU acceleration into EACirc project in order to speed-up the most computationally demanding part. The chosen part is implemented using GPGPU and the achieved speed-up is measured. The thesis also elaborates in build task automation and refactoring of the basic project structure.
 	\end{ThesisAbstract}
 	\begin{ThesisKeyWords}
-		acceleration, CUDA programming, build configuration, GPU, GPGPU, EACirc, software circuit, randomness testing
+		acceleration, CUDA programming, optimization, build configuration, GPU, GPGPU, EACirc, software circuit, randomness testing
 	\end{ThesisKeyWords}
 	\tableofcontents
 
@@ -99,7 +96,7 @@ To set EACirc project for using CUDA, a non-trivial intervention into the settin
 
 \bigskip
 
-\todo{The typeseting used for this thesis}
+The text of this thesis was typeset in \LaTeX{} using \textit{fithesis2} package created by Stanislav Filipčík~\cite{fithesis}. The codes fragments which appears in text are typeset using \LaTeX{} package \textit{minted}~\cite{minted} in version 2.0.
 
 
 
@@ -557,9 +554,46 @@ A class called \texttt{gpu\_task} was created. This class is responsible for lau
 \noindent
 The \texttt{block\_size} is 128 and \texttt{vec\_count} is the number of input vectors of EACirc.
 
-\chapter{Testing and Benchmarking}
+\chapter{Testing and benchmarking}
+
+\section{Testing}
+\section{Benchmarking}
 
 \chapter{Conclusions and future work}
+
+The process of automated building of the EACirc project from the source files was unified across multiple platforms. For this purpose a CMake tool was added to the project dependencies. Despite the added dependency, maintaining the project is now easier. The CMake tool prevents code duplication which had been an issue. In the process of integrating CMake into the project, refactoring of the basic structure of EACirc was made in order to improve compilation time and to introduce conditional building of distinct parts of EACirc.
+
+After the apparent testing the new build system was integrated into the EACirc developer branch \texttt{eacirc-dev} in the project repository located at GitHub page. The new build system is now used by every EACirc developer.
+
+\bigskip
+
+The EACirc program now supports running GPU accelerated computations using CUDA platform in order to speed-up the program execution. The support for GPU acceleration may be turned on/off during the project compilation time.
+
+Since the GPU acceleration of an computation is beneficial only if the computation fulfils certain criteria, the most suitable part of EACirc was chosen for that purpose. The chosen part is execution of software circuit which is run independently in large quantities and thus it can be optimized by use of data parallelism.
+
+The original CPU version of the circuit implementation served as a starting point for the new GPU accelerated implementation that was created as a goal of this thesis. Some unused features of the CPU version was not implemented in the created GPU implementation but the basic functionality of the circuit remained unchanged. 
+
+Despite of the original goal to make second implementation of the circuit, which is runnable only on GPU, the created implementation should be capable of running on CPU, too. This statement was newer tested to be true but after a minor code adjustments it should be possible.
+
+The created GPU implementation of the circuit execution was validated via integration testing. The tests that were made did not detected any severe errors.
+ 
+\bigskip
+\todo{results of speed-up and the hardware of machines used for benchmarking}
+\bigskip
+
+The GPU implementation of the circuit is now awaiting to be added into the EACirc developer branch \texttt{eacirc-dev} in the project repository located at GitHub page to be used by most of the EACirc users.
+
+\section{Future work}
+
+As for future work regarding speeding-up the EACirc project using parallelism several themes are offering to. These themes are sorted according its difficultness as they appear in text.
+
+The most trivial one is multi-device execution of the created circuit. It would bring the possibility of processing even larger amount of data on machines that are equipped with multiple CUDA capable GPUs. However, this solution would pay off only if was enough data to process in order to harness the power of SIMT architecture of the devices.
+
+The next theme is to work off the GPU implementation of the circuit to be runnable on CPU in order to provide only one implementation of the circuit and to prevent code duplication. To achieve this it requires to adapt the CUDA code to be compiled with regular C++ compiler and to implement a CPU job dispatcher. This dispatcher could utilize the today multi-core CPU by running the execution of the circuit in parallel.
+
+The last but not least theme is evaluation of the circuit on CPU while the circuit is executed on GPU simultaneously. This requires large intervention into the project design and program execution.
+
+
 
 
 
