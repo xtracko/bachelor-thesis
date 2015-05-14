@@ -70,14 +70,14 @@
 		\bigskip
 		
 		\noindent
-		Last but not least I would like to thank my family for continuous support and for a help with a language side of my bachelor thesis.
+		Last but not least, I would like to thank my family for continuous support and for help with language aspects of my bachelor thesis.
 	\end{ThesisThanks}
 	\begin{ThesisAbstract}
 		\todo{}
 		%TODO Thesis Abstract
 	\end{ThesisAbstract}
 	\begin{ThesisKeyWords}
-		acceleration, CUDA, CMake, GPU, GPGPU, EACirc, software circuit, randomness testing
+		acceleration, CUDA programming, build configuration, GPU, GPGPU, EACirc, software circuit, randomness testing
 	\end{ThesisKeyWords}
 	\tableofcontents
 
@@ -98,6 +98,7 @@ Since the performance of GPGPU is dependable on the used hardware the achieved s
 To set EACirc project for using CUDA, a non-trivial intervention into the settings of the project was needed. If the original settings of EACirc had been applied then this intervention would have resulted into a chaotic and further unmaintainable project. Therefore, in addition to the primary objective of this thesis to speed-up EACirc, the secondary objective is to remade the settings completely from scratch in order to prevent the problems that emerged by using CUDA. For this purpose an open-source tool CMake~\cite{cmake} was used that was developed by Kitware corporation~\cite{kitware}.
 
 \bigskip
+
 \todo{The typeseting used for this thesis}
 
 
@@ -116,7 +117,7 @@ As stated on the NVIDIA website \cite{about_cuda}, "CUDA is a parallel computing
 
 The figure~\ref{fig:cpu_vs_gpu_arch} shows a high level view of the CPU and GPU architecture. They both contain the same parts: DRAM, Cache, Control, and ALU. DRAM and Cache are memory units, the difference is that Cache is much smaller but significantly faster. The Control unit is responsible mainly for instruction fetching, decoding, etc. ALU is simply a worker that processes the input data. CPU's Control unit and Cache is much bigger and focuses on flow control and data caching in order to reduce the latency. The GPU's counterparts are simpler but multiplied, which allows to focus on data processing (throughput) and data parallelism. It is worth mentioning that the DRAM of a GPU is significantly faster in order to supply enough data to the big number of ALUs and to keep them busy.\footnote{The memory model of GPU is described in section~\ref{memory_hiearchy}.}
 
-The performance of GPU is mainly measured by two variables: throughput and memory bandwidth. Since GPU is mainly used to compute with real numbers throughput\footnote{For definition of throughput see section~\ref{throughput}.} is expressed in units of floating-point operations per second (FLOPS).\footnote{Floating-point operation is an operation on floating-point numbers which in informatics represents real numbers according to the international standard IEEE 754.} Memory bandwidth is the amount of data that can be processed per unit of time which is expressed in units of bytes per second (Bps).~\cite{professional_cuda} The figures~\ref{fig:gpu_throughput} and~\ref{fig:gpu_bandwith} show the theoretical maximum performance achievable on NVIDIA GPU's in contrast to Intel CPU's in terms of throughput and bandwidth.
+The performance of GPU is mainly measured by two variables: throughput and memory bandwidth. Since GPU is mainly used to compute with real numbers throughput\footnote{For definition of throughput see section~\ref{throughput}.} is expressed in units of floating-point operations per second (FLOPS)\footnote{Floating-point operation is an operation on floating-point numbers which in informatics represents real numbers according to the international standard IEEE 754.}. Memory bandwidth is the amount of data that can be processed per unit of time which is expressed in units of bytes per second (Bps).~\cite{professional_cuda} The figures~\ref{fig:gpu_throughput} and~\ref{fig:gpu_bandwith} show the theoretical maximum performance achievable on NVIDIA GPU's in contrast to Intel CPU's in terms of throughput and bandwidth.
 
 \begin{figure}[H]
 	\centering
@@ -151,7 +152,7 @@ The SIMT architecture of GPU is well suited and designed for computational probl
 
 In CUDA context a \emph{kernel} is a top-level function that is runnable on CUDA capable devices.~\cite{cuda_guide} It is recommended that the kernel processes only the smallest portion of input data that can be processed separately.~\cite{data_parallel_algorithms} For instance, when adding two vectors the kernel should just add two corresponding scalars of the vector.
 
-For each kernel that is running a separate lightweight thread is created on the device. As shown in figure \ref{fig:grid} a group of threads is forming a \emph{block} and a group of blocks is forming a \emph{grid}. Each thread has got unique ID dependant on its position in the block and each block has unique ID dependant on its position in the grid.\footnote{The grid might have up to 3 dimensions.~\cite{cuda_guide}}
+For each kernel that is running a separate lightweight thread is created on the device. As shown in figure \ref{fig:grid} a group of threads is forming a \emph{block} and a group of blocks is forming a \emph{grid}. Each thread has got unique ID dependant on its position in the block and each block has unique ID dependant on its position in the grid\footnote{The grid might have up to 3 dimensions.~\cite{cuda_guide}}.
 
 \begin{figure}[H]
 	\centering
@@ -162,9 +163,9 @@ For each kernel that is running a separate lightweight thread is created on the 
 
 The dimensions of the grid should correspond to the dimensions of the computational problem. In the example of adding vectors the grid should have the same width as the number of scalars in the vector. Since each thread has a unique ID the kernel knows which scalars to add and where to put the result into the final vector.
 
-The execution of a single kernel is initiated as soon as the device has enough available resources to run a whole block.\footnote{Threads of the same block are running concurrently.}~\cite{cuda_guide} This constraint allows that the threads of one block can communicate with each other (see section \ref{memory_hiearchy}) and that the computational problem can be scaled across different types of CUDA GPUs that disposes with other hardware capabilities.\footnote{For instance the number of cores or available memory.}~\footnote{Any program scales if and only if a similar performance is achieved for arbitrary size of input data or across different hardware.~\cite{cuda_best_practices} It is recommended that any well optimized program for CUDA scales.} The execution order of the blocks is not defined.
+The execution of a single kernel is initiated as soon as the device has enough available resources to run a whole block.\footnote{Threads of the same block are running concurrently.}~\cite{cuda_guide} This constraint allows that the threads of one block can communicate with each other (see section \ref{memory_hiearchy}) and that the computational problem can be scaled across different types of CUDA GPUs that disposes with other hardware capabilities\footnote{For instance the number of cores or available memory.}.\footnote{Any program scales if and only if a similar performance is achieved for arbitrary size of input data or across different hardware.~\cite{cuda_best_practices} It is recommended that any well optimized program for CUDA scales.} The execution order of the blocks is not defined.
 
-To fully utilize the device the size of the block should be multiple of a warp size\footnote{For current devices the warp size is 32 (see. section~\ref{cuda_architecture}).}. Each block is mapped to a single SM.\footnote{For definition of Streaming multiprocessor (SM) see~\ref{cuda_architecture}.} On a single SM several blocks may be active but the exact number is dependant on the GPU hardware parameters. Depending of the number of SMs several block may be run in parallel. This is fully done automatically by the CUDA platform. However, the programmer should know these constraints to produce optimized code for each device.\footnote{For various optimization techniques for CUDA platform see~\cite{cuda_best_practices}.}
+To fully utilize the device the size of the block should be multiple of a warp size\footnote{For current devices the warp size is 32 (see. section~\ref{cuda_architecture}).}. Each block is mapped to a single SM\footnote{For definition of Streaming multiprocessor (SM) see~\ref{cuda_architecture}.}. On a single SM several blocks may be active but the exact number is dependant on the GPU hardware parameters. Depending of the number of SMs several block may be run in parallel. This is fully done automatically by the CUDA platform. However, the programmer should know these constraints to produce optimized code for each device.\footnote{For various optimization techniques for CUDA platform see~\cite{cuda_best_practices}.}
 
 \section{Memory hierarchy}
 \label{memory_hiearchy}
@@ -288,7 +289,7 @@ Debugging of the device code is slightly different from debugging of the code fo
 
 To set EACirc project for using CUDA, an intervention into the settings of the project was needed. Below the original settings and workflow of EACirc are described. However, this settings had to be remade from scratch.
 
-The EACirc sources consist mainly of \emph{C} and \emph{C++} code. The code is divided into reasonably logical sections, but the overall structure and concept of the project are monolithic.\footnote{A monolithic binary is an executable that does not need any other dependencies or resources at a runtime. In other words, the binary is independent.} This leads to compilation of all sources into one big executable of approximately 9~MB, which takes some non-trivial time.
+The EACirc sources consist mainly of \emph{C} and \emph{C++} code. The code is divided into reasonably logical sections, but the overall structure and concept of the project are monolithic\footnote{A monolithic binary is an executable that does not need any other dependencies or resources at a runtime. In other words, the binary is independent.}. This leads to compilation of all sources into one big executable of approximately 9~MB, which takes some non-trivial time.
 
 On top of this EACirc is developed as a cross-platform application. To provide native builds for each supported platform (Windows~\cite{win} and Linux) a special makefile or an IDE specific project file are used simultaneously. They describe how to build the application. When a change in the build is introduced, e.g. a new source file is added, the change has to be manually implemented to all makefiles to provide consistency. This workflow is not easy to maintain as the violation of these rules can cause an uncomfortable pitfall.
 
@@ -398,46 +399,46 @@ It is now much easier to set the project for CUDA support with CMake than with o
 
 \chapter{Gate Circuit of EACirc}
 
-The purpose of EACirc is to differentiate input data and a referential random data from one another without any context. The input data consists of thousands of sample outputs from an arbitrary random generator which are referred to as \emph{input vectors}. The distinction is done by creating a gate circuit which processes the input data and outputs the result. The internal structure of the optimal gate circuit is unknown at the moment of invocation of the EACirc program. However, the optimal form of the circuit is constructed via a genetic algorithm.~\cite{ukrop_thesis}
+The purpose of EACirc is to differentiate input data and referential random data from one another without any context. The input data consists of thousands of sample outputs from an arbitrary random generator. These sample outputs are referred to as \emph{input vectors}. The distinction is done by creating a gate circuit which processes the input data and outputs the result. The internal structure of the optimal gate circuit is unknown at the moment of invocation of the EACirc program. However, the optimal form of the circuit is constructed via a genetic algorithm.~\cite{ukrop_thesis}
 
-Genetic algorithms are inspired by processes of reproduction and natural selection in living systems. They are searching for a satisfactory optimal solution for a given problem. The process of producing the acceptable solution consists of creating a random initial generation of individuals and then iteratively applying evaluation of the generation, selection of the best individuals for the next generation, and creating next generation by applying genetic operators.~\cite{genetic_algorithms}
+Genetic algorithms are inspired by processes of reproduction and natural selection in living systems. They search for a satisfactory optimal solution for a given problem. The process of producing the acceptable solution consists of creating a random initial generation of individuals and then iteratively applying evaluation of the generation, selection of the best individuals for the next generation, and creating next generation by applying genetic operators.~\cite{genetic_algorithms}
 
-The functionality of the gate circuit in EACirc is the same as an ordinary digital circuit that is composed from electronic components (\emph{gates}) connected with wires (\emph{connectors}). Each gate is performing some logical function on its input defined by connectors. The whole circuit takes one input vector, which is a fixed amount of logical data, and outputs if the input is random or not.\footnote{Actually the output of a circuit is not only a binary (random/non-random) but contains several other informations that are further processed.} Since the gate circuit, in the context of EACirc, is stored in memory of a computer, the implementation differs from the real world.
+The functionality of the gate circuit in EACirc is the same as an ordinary digital circuit that is composed from electronic components (\emph{gates}) connected with wires (\emph{connectors}). Each gate is performing some logical function on its input defined by connectors. The whole circuit takes one input vector, which is a fixed amount of logical data, and outputs if the input is random or not.\footnote{Actually the output of a circuit is not only a binary (random/non-random) but contains other information that is further processed.} Since the gate circuit, in the context of EACirc, is stored in the memory of a computer, the implementation differs from the real world.
 
-Producing the final gate circuit via genetic algorithm is an iterative process. In each iteration a whole generation of circuits must be evaluated. The evaluation of a single circuit is done by processing all of the input vectors. All of these parts of the process must be done in large quantities to ensure quality and that is a computationally intensive task. Fortunately, the evaluation of a single circuit and even the evaluation of the whole generation can be run effectively in parallel. This thesis focuses mainly on parallelization of evaluation of a single circuit.
+Producing the final gate circuit via genetic algorithm is an iterative process. In each iteration the whole generation of circuits must be evaluated. The evaluation of a single circuit is done by processing all the input vectors. All of these parts of the process must be done in large quantities to ensure quality, which is a computationally intensive task. Fortunately, the evaluation of a single circuit and even the evaluation of the whole generation can be run effectively in parallel. This thesis focuses mainly on parallelization of evaluation of a single circuit.
 
-The evaluation of a single circuit is suitable for parallelization, particularly for data parallelism on GPGPU and CUDA platform. The size of the input data is relatively small (usually 16~KiB or more)\footnote{The exact parameters of the circuit are runtime variables. The reported values in parenthesis are just the most used but if running on CUDA, bigger values are expected.} The input data are a set of input vectors (usually 1000 vectors). Each input vector is evaluated separately by the same circuit, which usually outputs only 1~byte of data. Therefore, the data transfers between host and device via a \emph{slow} PCIe bus will be small.\footnote{The PCIe bus has got a big latency, thus the number of transfers must be minimized or the transfers must be buffered.} The data parallelism can be achieved by mapping of execution of single input data to separate device thread. Single circuit processes different data equally, i.e. the data are different but the execution paths of multiple running circuits are same.
+The evaluation of a single circuit is suitable for parallelization, particularly for data parallelism on GPGPU and CUDA platform. The size of the input data is relatively small (usually 16~KiB or more)\footnote{The exact parameters of the circuit are runtime variables. The reported values in parenthesis are just the most used but if running on CUDA, bigger values are expected.} The input data are a set of input vectors (usually 1000 vectors). Each input vector is evaluated separately by the same circuit which usually outputs only 1~byte of data. Therefore, the data transfers between host and device via a \emph{slow} PCIe bus will be small.\footnote{The PCIe bus has got a big latency, thus the number of transfers must be minimized or the transfers must be buffered.} The data parallelism can be achieved by mapping of execution of single input data to separate device thread. The single circuit processes different data equally, i.e. the data is different but the execution paths of multiple running circuits are the same.
 
 
 \section{Software representation of hardware circuit}
 
-Follows the description of the CPU implementation and functionality of the gate circuit designed by Martin Ukrop.~\cite{ukrop_thesis} This representation served as starting artwork for the GPU implementation.
+The following text describes the CPU implementation and functionality of the gate circuit designed by Martin Ukrop.~\cite{ukrop_thesis} This representation served as a starting point for the GPU implementation.
 
-From informatics point of view the gate circuit can be described as directed acyclic graph (DAG) with some other restrictions described further. Each node represents some logical function (\emph{gate}), the edges (\emph{connectors}) of the vertices represents inputs for the individual logical functions and the flow of data. The graph is divided into several layers. Every node in each layer is connected only to nodes which belongs to the previous layer. For an illustration of the circuit see figure~\ref{fig:gate_circuit}.~\cite{eacirc_circuit}
+From informatics point of view, the gate circuit can be described as a directed acyclic graph (DAG) with some other restrictions described further. Each node represents a logical function (\emph{gate}), the edges (\emph{connectors}) of the vertices represents inputs for the individual logical functions and the flow of data. The graph is divided into several layers. Every node in each layer is connected only to nodes which belong to the previous layer. For a graphical presentation of the circuit see figure~\ref{fig:gate_circuit}.~\cite{eacirc_circuit}
 
 \begin{figure}[h]
 	\centering
 	\includegraphics[width=0.8\textwidth]{figures/gate_circuit.pdf}
 	\caption{The dimensions of the gate circuit}
-	\caption*{The gates are in blue, the connectors are the black lines. The yellow, green, and red nodes shows mapping of data to the gates. The flow of the data is from top to bottom.}
+	\caption*{The gates are in blue, the connectors are the black lines. The yellow, green, and red nodes show mapping of data to the gates. The flow of the data is from top to bottom.}
 	\label{fig:gate_circuit}
 \end{figure}
 
 \subsection{Use memory feature}
 
-The gate circuit has a special feature of using a memory. It allows to process larger input vectors than is the maximal width of the circuit input (see figure~\ref{fig:gate_circuit} and \texttt{size\_of\_input}). The input vector is divided into several parts of size \texttt{size\_of\_input} and each part is processed sequentially. A part of output (\texttt{size\_of\_memory}) from current run of the circuit is transfused to the input of the next run (see figure~\ref{fig:gate_circuit} and the yellow nodes). If this feature is not used then the \texttt{size\_of\_memory} is equal to~$0$. Unfortunately the feature of using a memory was newer used in production and thus in GPU version of the circuit is not implemented.
+The gate circuit has a special feature of using a memory. It allows to process larger input vectors than the maximal width of the circuit input (see figure~\ref{fig:gate_circuit} and \texttt{size\_of\_input}). The input vector is divided into several parts of size \texttt{size\_of\_input} and each part is processed sequentially. A part of output (\texttt{size\_of\_memory}) from current run of the circuit is transfused to the input of the next run (see figure~\ref{fig:gate_circuit} and the yellow nodes). If this feature is not used then the \texttt{size\_of\_memory} is equal to~$0$. Unfortunately, the feature of using a memory was newer used in production. Therefore, the feature is not implemented in GPU version of the circuit.
 
 \subsection{Circuit dimensions}
 
-The circuit dimensions (see figure~\ref{fig:gate_circuit}) are loaded at the EACirc invocation from settings and are fixed for the whole runtime of the program. The circuit has got \texttt{num\_of\_layers} layers. All layers except the last one have \texttt{size\_of\_layer} nodes. The last layer has \texttt{size\_of\_output\_layer} nodes. Each node has got maximum number of allowed connectors.
+The circuit dimensions (see figure~\ref{fig:gate_circuit}) are loaded at the EACirc invocation from settings and fixed for the whole runtime of the program. The circuit has got \texttt{num\_of\_layers} layers. All layers except the last one have \texttt{size\_of\_layer} nodes. The last layer has \texttt{size\_of\_output\_layer} nodes. Each node is limited by the same maximum number of allowed connectors.
 
 
 \section{CPU implementation}
 \label{cpu_implementation}
 
-The understanding of CPU implementation of the circuit by Martin Ukrop~\cite{ukrop_thesis} is necessary to provide a bridge interface to the GPU implementation and to preserve functionality.
+The understanding of CPU implementation of the circuit by Martin Ukrop~\cite{ukrop_thesis} is necessary in order to provide a bridge interface to the GPU implementation and to preserve functionality.
 
-In computer memory the gate circuit is represented as an 1-dimensional array of 32-bit unsigned integers. Each integer has its own meaning. The array is alternately divided into connection layers and function layers as shown in the figure~\ref{fig:circuit_cpu_array}. Each layer is aligned to multiple of \texttt{genome\_width}.
+In computer memory the gate circuit is represented as an 1-dimensional array of 32-bit unsigned integers. Each integer has its own meaning. The array is alternately divided into connection layers and function layers as shown in the figure~\ref{fig:circuit_cpu_array}. Each layer is aligned to a multiple of \texttt{genome\_width}.
 
 \begin{figure}[h]
 	\centering
@@ -448,7 +449,7 @@ In computer memory the gate circuit is represented as an 1-dimensional array of 
 
 \subsection{Connector layers}
 
-The connection layers contains connectors masks which are represented as 32-bit unsigned integers. Every node has assigned its own connector mask. If the $i$-th bit of the connector mask is \texttt{true} then exists connection from the $n$-th node of the previous layer to the node the connector is assigned to, where $n$ depends on the connector type. There are two types of connectors which are convertible to one another. The types are \emph{absolute connectors} and \emph{relative connectors}.
+The connection layers contain connector masks which are represented as 32-bit unsigned integers. Each node has assigned its own connector mask. If the $i$-th bit of the connector mask is \texttt{true} then connection exists from the $n$-th node of the previous layer to the node the connector is assigned to, where $n$ depends on the connector type. There are two types of connectors which are convertible to one another. The types are \emph{absolute connectors} and \emph{relative connectors}.
 
 Relative connector is a representation of a connection which is defined through relative positioning to the node it belongs to. This representation is used in genetic algorithm when creating new generation, i.e. if the circuit is cut in half and crossed with another individual\footnote{Crossing of individuals is one of the types of genetic operators used for creating a new generation of individuals.} the connector remains still valid.
 
@@ -456,23 +457,23 @@ Absolute connector is a representation of a connection by absolute positioning. 
 
 \subsection{Function layers}
 
-The function layers contains function masks which are represented as 32-bit unsigned integers. Every node has assigned its own function mask. The mask contains information about the function type and arguments. For the list of possible function types see EACirc wiki section Gate circuits.~\cite{eacirc_circuit}
+The function layers contain function masks which are represented as 32-bit unsigned integers. To each node a special function mask is assigned. The mask contains information about the function type and arguments. For the list of possible function types see EACirc wiki section Gate circuits.~\cite{eacirc_circuit}
 
 \subsection{Circuit interpreter}
 
-The circuit interpreter is responsible for executing the circuit. The interpreter processes each layer of the circuit sequentially. The CPU version uses dynamic memory allocation for the inputs and outputs for the currently processed layer. Each invocation of the CPU circuit interpreter on the same circuit (the same circuit is invoked thousand times and more) converts the relative connectors to the absolute connectors. This is a major performance drawback and it could be done only once for each circuit to speed the execution.
+The circuit interpreter is responsible for executing the circuit. The interpreter processes each layer of the circuit sequentially. The CPU version uses the dynamic allocation of memory for the inputs and outputs of the currently processed layer. Each invocation of the CPU circuit interpreter on the same circuit (the same circuit is invoked thousand times and more) converts the relative connectors to the absolute connectors. This is a major performance drawback and it could be done only once for each circuit to speed the execution.
 
 
 \section{GPU implementation}
 
-The GPU implementation source files of the gate circuit is placed in the directory \texttt{eacirc/circuit/gpu\_gate}. The sources are written mainly in \emph{CUDA~C++}\footnote{For the description of \emph{CUDA~C++} language see section~\ref{cuda_lang}} or \emph{C++} programming language using the standard \emph{C++11}.~\cite{std_c++11, cuda_guide} The GPU implementation provides proper interface for communication with the rest of the program. The GPU circuit representation and interpreter is written using \emph{C++} templates~\cite{std_c++11} in order to provide multiple sizes of connector and function masks and thus larger circuits.
+The GPU implementation source files of the gate circuit is placed in the directory \texttt{eacirc/circuit/gpu\_gate}. The sources are written mainly in \emph{CUDA~C++}\footnote{For the description of \emph{CUDA~C++} language see section~\ref{cuda_lang}} or \emph{C++} programming language using the standard \emph{C++11}.~\cite{std_c++11, cuda_guide} The GPU implementation provides the proper interface for communication with the rest of the program. The GPU circuit representation and the interpreter are written using \emph{C++} templates~\cite{std_c++11} in order to provide multiple sizes of connector and function masks and thus larger circuits.
 
-The GPU implementation is written with the idea of running the code on GPU and on CPU too. The GPU support is primary. Running the code on CPU should by possible after minimal intervention into the EACirc source codes.\footnote{Running the code on CPU has not been tested yet, but should be possible to do so.} The reason to make new implementation that is capable running on GPU and CPU is to maintain only one implementation that is runnable on every machine and to provide GPU acceleration if the machine hardware supports it.
+The GPU implementation is written with the idea of running the code on GPU and on CPU, too. The GPU support is the primary one. Running the code on CPU should by possible after a minimal intervention into the EACirc source codes.\footnote{Running the code on CPU has not been tested yet, but should be possible.} The reason to make the new implementation capable running on GPU and CPU is to maintain only one implementation that is runnable on every machine and provides GPU acceleration if the machine hardware supports it.
 
 \subsection{Circuit representation}
 \label{gpu_curcuit_repr}
 
-The GPU implementation can not use the storage layout of the circuit as the CPU version described in section~\ref{cpu_implementation}, because of the CUDA memory restriction for faster data access.
+The GPU implementation cannot use the storage layout of the circuit as the CPU version described in section~\ref{cpu_implementation}, because of the CUDA memory restriction for faster data access.
 
 The circuit is stored as 1-dimensional array of instances of \emph{C++} template class \texttt{gate\_circuit::node} in a \emph{constant memory} of the device. The nodes are stored similarly as layers in CPU implementation using alignment (see figure~\ref{fig:gpu_genome}).
 
@@ -484,7 +485,7 @@ The circuit is stored as 1-dimensional array of instances of \emph{C++} template
 \end{figure}
 
 
-The \texttt{node} class represents circuit nodes that have its own function and connector masks. The reason of this data layout is to use coalesced memory access for faster data transfers and to better use the caching capabilities of GPU\footnote{For coalesced access and caching see section~\ref{memory_hiearchy}.} Besides the whole node always resides in one cache line thus only one transaction to load data from constant memory is used. The listing~\ref{listing:gpu_node} shows the basic structure of the node using \emph{C++} code.
+The \texttt{node} class represents circuit nodes that have its own function and connector masks. The reasons of this data layout are to use coalesced memory access for faster data transfers and to better use the caching capabilities of GPU.\footnote{For coalesced access and caching see section~\ref{memory_hiearchy}.} The whole node always resides in one cache line and therefore, only one transaction to load data from constant memory is used. The listing~\ref{listing:gpu_node} shows the basic structure of the node using \emph{C++} code.
 
 \begin{listing}[h]
 	\begin{minted}[autogobble, linenos, frame=single, xleftmargin=2em]{cpp}
@@ -505,21 +506,21 @@ The \texttt{node} class represents circuit nodes that have its own function and 
 
 \subsection{Converting between CPU and GPU representation}
 
-The template class \texttt{gate\_helper} is responsible for conversion between CPU and GPU representation of the circuit. The conversion is performed on CPU before the circuit definition is send to device and executed. The gate helper also transfers the relative connectors to absolute connectors, because the GPU interpreter works only with absolute connectors.
+The template class \texttt{gate\_helper} is responsible for conversion between CPU and GPU representation of the circuit. The conversion is performed on CPU before the circuit definition is sent to device and executed. The gate helper also transfers the relative connectors to absolute connectors, because the GPU interpreter works only with absolute connectors.
 
 \subsection{Interpreter}
 
-The GPU circuit interpreter is contained in template class \texttt{gate\_interpreter}. This class is capable of executing the circuit on GPU and CPU. The reason, this class is written as template, is to support different types of circuits (see~\ref{gpu_curcuit_repr}). One invocation of circuit interpreter processes only one input vector.
+The GPU circuit interpreter is contained in template class \texttt{gate\_interpreter}. This class is capable of executing the circuit on GPU and CPU. The reason why this class is written as a template is to support different types of circuits (see~\ref{gpu_curcuit_repr}). One invocation of the circuit interpreter processes only one input vector.
 
-The GPU interpreter processes the data similarly as the CPU -- one circuit layer after another. The state of the execution is maintained per instance basis thus for concurrent execution, multiple instances must be created. The inputs and outputs from currently processed layer are stored in memory that is allocated outside the class scope. Therefore, different storage spaces may be used when running interpreter on CPU and GPU. The input and output vectors are passed through pointer for each circuit execution.
+The GPU interpreter processes the data similarly as the CPU version -- one circuit layer after another. The state of the execution is maintained per instance and thus multiple instances must be created for concurrent execution. The inputs and outputs from the currently processed layer are stored in a memory that is allocated outside the class scope. Therefore, different storage spaces may be used when running the interpreter on CPU or GPU. The input and output vectors are passed through a pointer for each circuit execution.
 
 \subsection{Kernel}
 
-The kernel function\footnote{For definition of kernel see section~\ref{thread_hierarchy}.} accepts necessary parameters to run the circuit on GPU such as pointer to the storage of circuit inputs and outputs, the circuit definition, and the size of the device's shared memory bank\footnote{For description of shared memory bank see section~\ref{memory_hiearchy}.}. The listing~\ref{listing:kernel} shows the code.
+The kernel function\footnote{For definition of kernel see section~\ref{thread_hierarchy}.} accepts the following necessary parameters to run the circuit on GPU: pointer to the storage of circuit inputs and outputs, the circuit definition, and the size of the device's shared memory bank\footnote{For the description of the shared memory bank see section~\ref{memory_hiearchy}.}. The listing~\ref{listing:kernel} shows the code.
 
-The kernel computes its ID and the exact position of input and output vectors in the global memory which the kernel is supposed to process. Then the kernel allocates the space for interpreter layers in a shared memory for the fastest data access. The reason to use shared memory over registers is that the size of shared memory may be specified at runtime during kernel launch. The size of registers must be known at the compilation time. Since the size of circuit layer is not know at compile time, the shared memory is used for the input and outputs of currently processed layer.
+The kernel computes its ID and the exact position of input and output vectors which are located in the global memory and which the kernel is supposed to process. Then the kernel allocates the space for interpreter layers in a shared memory for the fastest data access. The reason to use shared memory over registers is that the size of shared memory may be specified at the runtime during kernel launch. On the contrary, the size of registers must be known at the compile time. Since the size of the circuit layer is not know at the compile time, the shared memory is used for inputs and outputs of the currently processed layer.
 
-The allocation is done by the CUDA platform automatically when the execution of the block starts. Since the shared memory is own to a whole block, each kernel must appropriate a space for its own execution layers. However, each thread of the warp accesses the data in shared memory at different addresses simultaneously and the bank conflict\footnote{For description of bank conflict see~\ref{memory_hiearchy}.} can emerge. The bank conflicts are prevented using a technique called striding. The technique embodies in allocating an extra space for each thread. The size of the extra space is equal to the bank size and is never accessed, thus each thread of the warp access different bank every time.
+The allocation is done by the CUDA platform automatically when the execution of the block starts. Since the shared memory belongs to the whole block of threads, each kernel must ensure a space for its own execution layers. However, each thread of the warp accesses the data in the shared memory at different addresses simultaneously and the bank conflict\footnote{For the description of bank conflict see~\ref{memory_hiearchy}.} can emerge. The bank conflicts are prevented using a technique called striding. The technique is based on allocation of an extra space for each thread. The size of the extra space is equal to the bank size and is never accessed by any thread, thus each thread of the warp accesses a different bank every time.
 
 \begin{listing}[h]
 	\begin{minted}[autogobble, linenos, frame=single, xleftmargin=2em]{cuda}	
@@ -549,12 +550,14 @@ The allocation is done by the CUDA platform automatically when the execution of 
 
 \subsection{Job dispatching}
 
-A class called \texttt{gpu\_task} was created. This class is responsible for launching the kernel, managing device memory and coping the data from CPU and GPU. It uses host page locked memory~\cite{cuda_guide} for faster data transfers between the host and the device. The number of launched kernel threads is:
+A class called \texttt{gpu\_task} was created. This class is responsible for launching the kernel, managing device memory and copying the data from CPU and GPU. It uses host page locked memory~\cite{cuda_guide} for faster data transfers between the host and the device. The number of launched kernel threads is calculated as follows:
 
 \mint[frame=none]{cpp}{std::ceil( float( vec_count ) / block_size ) * block_size}
 
 \noindent
 The \texttt{block\_size} is 128 and \texttt{vec\_count} is the number of input vectors of EACirc.
+
+\chapter{Testing and Benchmarking}
 
 \chapter{Conclusions and future work}
 
