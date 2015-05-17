@@ -1,4 +1,4 @@
-\documentclass[12pt,oneside]{fithesis2}
+\documentclass[12pt,twoside]{fithesis2}
 
 
 \usepackage[english]{babel}
@@ -15,12 +15,13 @@
 \definecolor{dark-green}{rgb}{0.15,0.4,0.15}
 \definecolor{medium-blue}{rgb}{0,0,0.5}
 
-\usepackage[plainpages=false, pdfpagelabels, unicode]{hyperref}
+%\usepackage[plainpages=false, pdfpagelabels, unicode]{hyperref}  %pc version
+\usepackage[plainpages=false, pdfpagelabels, unicode, hidelinks]{hyperref} %print version
 
 \usepackage{enumitem}
 \usepackage[final]{microtype}
-\usepackage[top=3.5cm, bottom=4cm, left=3cm, right=3cm]{geometry}	% pc version
-%\usepackage[top=3.5cm, bottom=4cm, left=3.5cm, right=2.5cm]{geometry}	% print version
+%\usepackage[top=3.5cm, bottom=4cm, left=3cm, right=3cm]{geometry}	% pc version
+\usepackage[top=3.5cm, bottom=4cm, left=3.5cm, right=2.5cm]{geometry}	% print version
 
 \usepackage[backend=biber,style=ieee]{biblatex}
 \addbibresource{thesis.bib}
@@ -30,6 +31,8 @@
 
 \usepackage{multicol}
 \usepackage{subcaption} 
+
+\usepackage{pgfplots}
 
 \usepackage{tikz}
 \usetikzlibrary{trees, calc, shapes.arrows, shapes.geometric, shapes.multipart}
@@ -50,10 +53,7 @@
 
 
 
-\newcommand{\todo}{
-	\noindent
-	{\large\color{red}\textbf{TODO}}
-}
+
 
 \begin{document}
 \FrontMatter
@@ -63,7 +63,7 @@
 		\AdvisorName
 	\end{ThesisDeclaration}
 	\begin{ThesisThanks}
-		I thank CRoCS laboratory for provision of workspace and hardware resources to make this thesis happen. I would like to thank Petr Švenda for leading my work and Martin Ukrop for endurance to answering my numerous question about EACirc insides.
+		I thank CRoCS laboratory for provision of workspace and hardware resources to make this thesis happen. I would like to thank Petr Švenda for leading my work and Martin Ukrop for answering my numerous questions about EACirc insides.
 		
 		\bigskip
 		
@@ -71,18 +71,21 @@
 		Last but not least, I would like to thank my family for continuous support and for help with language aspects of my bachelor thesis.
 	\end{ThesisThanks}
 	\begin{ThesisAbstract}
-		The main objective of this thesis is to bring support for GPU acceleration into EACirc project in order to speed-up the most computationally demanding part. The chosen part is implemented using GPGPU and the achieved speed-up is measured. The thesis also elaborates in build task automation and refactoring of the basic project structure.
+		This thesis deals with the acceleration of the EACirc program computations which are used in the randomness testing research. The computations of the original version of EACirc were very slow, which had a negative impact on an effective use of the program. The current version created within this thesis accelerates the selected computations on GPU by using the CUDA platform. An execution of a software circuit used by EACirc was chosen as a suitable solution for speeding-up the computations. This circuit was rewritten for the CUDA platform and then the achieved speed-up was measured.
+		
+		The second part of this thesis deals with the improvement of a system for automated building of the EACirc program by using CMake. The basic structure of the program source files was adjusted. The use of CMake and the new structure resulted in a faster and more comfortable compilation of EACirc program.
 	\end{ThesisAbstract}
 	\begin{ThesisKeyWords}
-		acceleration, CUDA programming, optimization, build configuration, GPU, GPGPU, EACirc, software circuit, randomness testing
+		acceleration, CUDA programming, optimization, build configuration, GPU, GPGPU, EACirc, software circuit
 	\end{ThesisKeyWords}
 	\tableofcontents
+	
 
 \MainMatter
 \chapter{Introduction}
 Random data and the concept of randomness are used in many branches of informatics. However, one of the fundamental ways how to use these principles is in cryptography and IT security. For instance, let there be a communication among several entities. The main content of the communication is meant to stay hidden from other entities, thus the communication needs to be encrypted by a chosen encryption protocol. The potential attacker\footnote{The one who wants to know the hidden content of the encrypted communication without permission of legal participants.} could intercept some encrypted messages and subject them to analysis. On the basis of certain traits of the protocol or similarities among the individual messages the encryption could be broken and the hidden content of the communication could be read by the attacker. Therefore, the goal of encryption protocols is that the encrypted messages are not similar or do not have some characteristic traits. In other words, the encrypted messages must look like random data to the attacker. However, this is very difficult to be ensured.
 
-That is why tools have been created to test randomness, and thus quality, of ciphers. One of these tools is called EACirc and is being developed at the Faculty of Informatics of Masaryk University in CRoCS laboratory (Centre for Research on Cryptography and Security). It can tell how much the input data are close to the referential random data.\footnote{This is only an approximative explanation. The exact definition and meaning of EACirc results are described in Martin Ukrop's thesis Usage of evolvable circuit for statistical testing of randomness~\cite{ukrop_thesis} since the accurate understanding of EACirc tool is not relevant for this thesis.} To achieve this EACirc uses raw computation power. However, the computations are not run in parallel. If it was the case the whole process would be significantly speeded-up. Faster evaluation could advance capabilities of EACirc and help to test the randomness in a more detailed manner. Speeding-up the EACirc is the primary objective of this thesis.
+That is why tools have been created to test randomness, and thus quality, of ciphers. One of these tools is called EACirc and is being developed at the Faculty of Informatics of Masaryk University in CRoCS laboratory (Centre for Research on Cryptography and Security). It can tell if data are distinguishable from truly random data stream.\footnote{This is only an approximative explanation. The exact definition and meaning of EACirc results are described in Martin Ukrop's thesis Usage of evolvable circuit for statistical testing of randomness~\cite{ukrop_thesis} since the accurate understanding of EACirc tool is not relevant for this thesis.} To achieve this EACirc uses raw computation power. However, the computations are not run in parallel. If it was the case the whole process would be significantly speeded-up. Faster evaluation could advance capabilities of EACirc and help to test the randomness in a more detailed manner. Speeding-up the EACirc is the primary objective of this thesis.
 
 The speed-up of EACirc is achieved with running some chosen computations on a GPU. The GPU must have got a build-in support of a general purpose programming (GPGPU). Such chip can perform not only algorithms used in rendering of computer graphics but also almost every other algorithm that is runnable on a CPU. The main difference in comparison with CPU is that the CPU is optimized to minimize latency whereas GPU is optimized to maximize throughput. Latency is the time needed to start and finish the execution of a single instruction including time to load necessary data. On the other hand, throughput\label{throughput} is a number which means how many instructions can be processed per one time unit.~\cite{professional_cuda} Since some parts of EACirc process a lot of data with algorithms which does not need to be optimized for latency\footnote{An algorithm that needs to be optimized for latency in order to maximize performance is that one which has lots of edges in it's control flow graph.} the use of GPU's is suitable.
 
@@ -92,7 +95,7 @@ Since the performance of GPGPU is dependable on the used hardware the achieved s
 
 \bigskip
 
-To set EACirc project for using CUDA, a non-trivial intervention into the settings of the project was needed. If the original settings of EACirc had been applied then this intervention would have resulted into a chaotic and further unmaintainable project. Therefore, in addition to the primary objective of this thesis to speed-up EACirc, the secondary objective is to remade the settings completely from scratch in order to prevent the problems that emerged by using CUDA. For this purpose an open-source tool CMake~\cite{cmake} was used that was developed by Kitware corporation~\cite{kitware}.
+To set EACirc project for using CUDA, a non-trivial intervention into the settings of the project was needed. If the original settings of EACirc had been applied then this intervention would have resulted into a chaotic and further unmaintainable project. Therefore, in addition to the primary objective of this thesis to speed-up EACirc, the secondary objective is to remade the settings completely from scratch in order to prevent the problems that emerged by using CUDA. For this purpose an open-source tool CMake~\cite{cmake} developed by Kitware corporation~\cite{kitware} was used.
 
 \bigskip
 
@@ -276,8 +279,6 @@ NVIDIA provides the necessary tools for the development on CUDA platform through
 
 Debugging of the device code is slightly different from debugging of the code for the host. It requires a special debugger. The one that comes with CUDA Toolkit is called \texttt{cuda-gdb}.~\cite{cuda_gdb} The interface of this tool is almost the same as the interface of the known Linux compiler \texttt{gdb}.
 
-%The CUDA Toolkit also provides tools for kernel profiling and feature rich libraries for the common computation problems on CUDA platform.
-
 
 
 
@@ -396,7 +397,7 @@ It is now much easier to set the project for CUDA support with CMake than with o
 
 \chapter{Gate Circuit of EACirc}
 
-The purpose of EACirc is to differentiate input data and referential random data from one another without any context. The input data consists of thousands of sample outputs from an arbitrary random generator. These sample outputs are referred to as \emph{input vectors}. The distinction is done by creating a gate circuit which processes the input data and outputs the result. The internal structure of the optimal gate circuit is unknown at the moment of invocation of the EACirc program. However, the optimal form of the circuit is constructed via a genetic algorithm.~\cite{ukrop_thesis}
+The purpose of EACirc is to distinguish between input data and referential random data from one another without any additional information. The input data consists of thousands of sample outputs from an arbitrary random generator. These sample outputs are referred to as \emph{input vectors}. The distinction is done by creating a gate circuit which processes the input data and outputs the result. The internal structure of the optimal gate circuit is unknown at the moment of invocation of the EACirc program. However, the optimal form of the circuit is constructed via a genetic algorithm.~\cite{ukrop_thesis}
 
 Genetic algorithms are inspired by processes of reproduction and natural selection in living systems. They search for a satisfactory optimal solution for a given problem. The process of producing the acceptable solution consists of creating a random initial generation of individuals and then iteratively applying evaluation of the generation, selection of the best individuals for the next generation, and creating next generation by applying genetic operators.~\cite{genetic_algorithms}
 
@@ -404,14 +405,14 @@ The functionality of the gate circuit in EACirc is the same as an ordinary digit
 
 Producing the final gate circuit via genetic algorithm is an iterative process. In each iteration the whole generation of circuits must be evaluated. The evaluation of a single circuit is done by processing all the input vectors. All of these parts of the process must be done in large quantities to ensure quality, which is a computationally intensive task. Fortunately, the evaluation of a single circuit and even the evaluation of the whole generation can be run effectively in parallel. This thesis focuses mainly on parallelization of evaluation of a single circuit.
 
-The evaluation of a single circuit is suitable for parallelization, particularly for data parallelism on GPGPU and CUDA platform. The size of the input data is relatively small (usually 16~KiB or more)\footnote{The exact parameters of the circuit are runtime variables. The reported values in parenthesis are just the most used but if running on CUDA, bigger values are expected.} The input data are a set of input vectors (usually 1000 vectors). Each input vector is evaluated separately by the same circuit which usually outputs only 1~byte of data. Therefore, the data transfers between host and device via a \emph{slow} PCIe bus will be small.\footnote{The PCIe bus has got a big latency, thus the number of transfers must be minimized or the transfers must be buffered.} The data parallelism can be achieved by mapping of execution of single input data to separate device thread. The single circuit processes different data equally, i.e. the data is different but the execution paths of multiple running circuits are the same.
+The evaluation of a single circuit is suitable for parallelization, particularly for data parallelism on GPGPU and CUDA platform. The size of the input data is relatively small (usually 16~KB or more)\footnote{The exact parameters of the circuit are runtime variables. The reported values in parenthesis are just the most used but bigger values are expected if running on CUDA.} The input data are a set of input vectors (usually 1000 vectors). Each input vector is evaluated separately by the same circuit which usually outputs only 1~byte of data. Therefore, the data transfers between host and device via a \emph{slow} PCIe bus will be small.\footnote{The PCIe bus has got a big latency, thus the number of transfers must be minimized or the transfers must be buffered.} The data parallelism can be achieved by mapping execution of single input data to separate device thread. The single circuit processes different data equally, i.e. the data is different but the execution paths of multiple running circuits are the same.
 
 
 \section{Software representation of hardware circuit}
 
 The following text describes the CPU implementation and functionality of the gate circuit designed by Martin Ukrop.~\cite{ukrop_thesis} This representation served as a starting point for the GPU implementation.
 
-From informatics point of view, the gate circuit can be described as a directed acyclic graph (DAG) with some other restrictions described further. Each node represents a logical function (\emph{gate}), the edges (\emph{connectors}) of the vertices represents inputs for the individual logical functions and the flow of data. The graph is divided into several layers. Every node in each layer is connected only to nodes which belong to the previous layer. For a graphical presentation of the circuit see figure~\ref{fig:gate_circuit}.~\cite{eacirc_circuit}
+From informatics point of view, the gate circuit can be described as a directed acyclic graph (DAG) with some other restrictions described further. Each node represents a logical function (\emph{gate}), the edges (\emph{connectors}) between nodes represent inputs for the individual logical functions and the flow of data. The graph is divided into several layers. Every node in each layer is connected only to nodes which belong to the previous layer. For a graphical presentation of the circuit see figure~\ref{fig:gate_circuit}.~\cite{eacirc_circuit}
 
 \begin{figure}[h]
 	\centering
@@ -435,7 +436,7 @@ The circuit dimensions (see figure~\ref{fig:gate_circuit}) are loaded at the EAC
 
 The understanding of CPU implementation of the circuit by Martin Ukrop~\cite{ukrop_thesis} is necessary in order to provide a bridge interface to the GPU implementation and to preserve functionality.
 
-In computer memory the gate circuit is represented as an 1-dimensional array of 32-bit unsigned integers. Each integer has its own meaning. The array is alternately divided into connection layers and function layers as shown in the figure~\ref{fig:circuit_cpu_array}. Each layer is aligned to a multiple of \texttt{genome\_width}.
+In computer memory the gate circuit is represented as a 1-dimensional array of 32-bit unsigned integers. The array is alternately divided into connection layers and function layers as shown in the figure~\ref{fig:circuit_cpu_array}. Each layer is aligned to a multiple of \texttt{genome\_width}.
 
 \begin{figure}[h]
 	\centering
@@ -446,26 +447,26 @@ In computer memory the gate circuit is represented as an 1-dimensional array of 
 
 \subsection{Connector layers}
 
-The connection layers contain connector masks which are represented as 32-bit unsigned integers. Each node has assigned its own connector mask. If the $i$-th bit of the connector mask is \texttt{true} then connection exists from the $n$-th node of the previous layer to the node the connector is assigned to, where $n$ depends on the connector type. There are two types of connectors which are convertible to one another. The types are \emph{absolute connectors} and \emph{relative connectors}.
+The connection layers contain connector masks which are represented as 32-bit unsigned integers. Each node has assigned its own connector mask. If the $i$-th bit of the connector mask is \texttt{true} then connection exists from the $n$-th node of the previous layer to the node the connector is assigned to, where $n$ depends on the connector type. There are two types of connectors which are convertible to one another. The types are \emph{relative connectors} and \emph{absolute connectors}.
 
-Relative connector is a representation of a connection which is defined through relative positioning to the node it belongs to. This representation is used in genetic algorithm when creating new generation, i.e. if the circuit is cut in half and crossed with another individual\footnote{Crossing of individuals is one of the types of genetic operators used for creating a new generation of individuals.} the connector remains still valid.
+Relative connector is a representation of a connection which is defined through relative position to the node it belongs to. This representation is used in genetic algorithm when creating new generation, i.e. if the circuit is cut in half and crossed with another individual\footnote{Crossing of individuals is one of the types of genetic operators used for creating a new generation of individuals.} the connector remains still valid.
 
-Absolute connector is a representation of a connection by absolute positioning. This positioning is used when the circuit is being executed because then the process of resolving the absolute connector is much faster then resolving the relative connector.
+Absolute connector is a representation of a connection defined by absolute positioning. This positioning is used when the circuit is being executed because the process of resolving the absolute connector is much faster then resolving the relative connector.
 
 \subsection{Function layers}
 
-The function layers contain function masks which are represented as 32-bit unsigned integers. To each node a special function mask is assigned. The mask contains information about the function type and arguments. For the list of possible function types see EACirc wiki section Gate circuits.~\cite{eacirc_circuit}
+The function layers contain function masks which are represented also as 32-bit unsigned integers. To each node a special function mask is assigned. The mask contains information about the function type and arguments. For the list of possible function types see EACirc wiki section Gate circuits.~\cite{eacirc_circuit}
 
 \subsection{Circuit interpreter}
 
-The circuit interpreter is responsible for executing the circuit. The interpreter processes each layer of the circuit sequentially. The CPU version uses the dynamic allocation of memory for the inputs and outputs of the currently processed layer. Each invocation of the CPU circuit interpreter on the same circuit (the same circuit is invoked thousand times and more) converts the relative connectors to the absolute connectors. This is a major performance drawback and it could be done only once for each circuit to speed the execution.
+The circuit interpreter is responsible for executing the circuit. The interpreter processes each layer of the circuit sequentially. The CPU version uses the dynamic allocation of memory for the inputs and outputs of the currently processed layer. Each invocation of the CPU circuit interpreter on the same circuit (the same circuit is invoked thousand times and more) converts the relative connectors to the absolute connectors. This is a major performance bottleneck and it could be done only once for each circuit to speed the execution.
 
 
 \section{GPU implementation}
 
-The GPU implementation source files of the gate circuit is placed in the directory \texttt{eacirc/circuit/gpu\_gate}. The sources are written mainly in CUDA~C++\footnote{For the description of CUDA~C++ language see section~\ref{cuda_lang}} or C++ programming language using the standard \emph{C++11}.~\cite{std_c++11, cuda_guide} The GPU implementation provides the proper interface for communication with the rest of the program. The GPU circuit representation and the interpreter are written using C++ templates~\cite{std_c++11} in order to provide multiple sizes of connector and function masks and thus larger circuits.
+The GPU implementation source files of the gate circuit are placed in the directory \texttt{eacirc/circuit/gpu\_gate}. The sources are written mainly in CUDA~C++\footnote{For the description of CUDA~C++ language see section~\ref{cuda_lang}} or C++ programming language using the standard \emph{C++11}.~\cite{std_c++11, cuda_guide} The GPU implementation provides the proper interface for communication with the rest of the program. The GPU circuit representation and the interpreter are written using C++ templates~\cite{std_c++11} in order to provide multiple sizes of connector and function masks and thus larger circuits.
 
-The GPU implementation is written with the idea of running the code on GPU and on CPU, too. The GPU support is the primary one. Running the code on CPU should by possible after a minimal intervention into the EACirc source codes.\footnote{Running the code on CPU has not been tested yet, but should be possible.} The reason to make the new implementation capable running on GPU and CPU is to maintain only one implementation that is runnable on every machine and provides GPU acceleration if the machine hardware supports it.
+The GPU implementation is written with the idea of running the code on GPU and on CPU, too. The GPU support is the primary one. Running the code on CPU should by possible after a minimal intervention into the EACirc source codes. The reason to make the new implementation capable running on GPU and CPU is to maintain only one implementation that is runnable on every machine which provides GPU acceleration if the machine hardware supports it.
 
 \subsection{Circuit representation}
 \label{gpu_curcuit_repr}
@@ -503,7 +504,7 @@ The \texttt{node} class represents circuit nodes that have its own function and 
 
 \subsection{Converting between CPU and GPU representation}
 
-The template class \texttt{gate\_helper} is responsible for conversion between CPU and GPU representation of the circuit. The conversion is performed on CPU before the circuit definition is sent to device and executed. The gate helper also transfers the relative connectors to absolute connectors, because the GPU interpreter works only with absolute connectors.
+The template class \texttt{gate\_helper} is responsible for conversion between CPU and GPU representation of the circuit. The conversion is performed on CPU before the circuit definition is sent to device and executed. The gate helper also converts the relative connectors to absolute connectors, because the GPU interpreter works only with absolute connectors.
 
 \subsection{Interpreter}
 
@@ -513,11 +514,11 @@ The GPU interpreter processes the data similarly as the CPU version -- one circu
 
 \subsection{Kernel}
 
-The kernel function\footnote{For definition of kernel see section~\ref{thread_hierarchy}.} accepts the following necessary parameters to run the circuit on GPU: pointer to the storage of circuit inputs and outputs, the circuit definition, and the size of the device's shared memory bank\footnote{For the description of the shared memory bank see section~\ref{memory_hiearchy}.}. The listing~\ref{listing:kernel} shows the code.
+The kernel function\footnote{For definition of kernel see section~\ref{thread_hierarchy}.} accepts the following necessary parameters to run the circuit on GPU: pointer to the storage of circuit inputs and outputs, the circuit definition, and the size of the device shared memory bank\footnote{For the description of the shared memory bank see section~\ref{memory_hiearchy}.}. The listing~\ref{listing:kernel} shows the code.
 
-The kernel computes its ID and the exact position of input and output vectors which are located in the global memory and which the kernel is supposed to process. Then the kernel allocates the space for interpreter layers in a shared memory for the fastest data access. The reason to use shared memory over registers is that the size of shared memory may be specified at the runtime during kernel launch. On the contrary, the size of registers must be known at the compile time. Since the size of the circuit layer is not know at the compile time, the shared memory is used for inputs and outputs of the currently processed layer.
+The kernel computes its ID and the exact position of input and output vectors which are located in the global memory and which the kernel will process. Then the kernel allocates the space for interpreter layers in a shared memory for the fastest data access. The reason to use shared memory over registers is that the size of shared memory may be specified at the runtime during kernel launch. On the contrary, the size of registers must be known at the compile time. Since the size of the circuit layer is not know at the compile time, the shared memory is used for inputs and outputs of the currently processed layer.
 
-The allocation is done by the CUDA platform automatically when the execution of the block starts. Since the shared memory belongs to the whole block of threads, each kernel must ensure a space for its own execution layers. However, each thread of the warp accesses the data in the shared memory at different addresses simultaneously and the bank conflict\footnote{For the description of bank conflict see~\ref{memory_hiearchy}.} can emerge. The bank conflicts are prevented using a technique called striding. The technique is based on allocation of an extra space for each thread. The size of the extra space is equal to the bank size and is never accessed by any thread, thus each thread of the warp accesses a different bank every time.
+The allocation is done by the CUDA platform automatically when the execution of the block starts. Since the shared memory belongs to the a whole block of threads, each kernel must ensure a space for its own execution layers. However, each thread of the warp accesses the data in the shared memory at different addresses simultaneously and a bank conflict\footnote{For the description of bank conflict see~\ref{memory_hiearchy}.} can emerge. The bank conflicts are prevented using a technique called striding. The technique is based on allocation of extra space for each thread. The size of the extra space is equal to the bank size and is never accessed by any thread, thus each thread of the warp accesses a different bank every time.
 
 \begin{listing}[h]
 	\begin{minted}[autogobble, linenos, frame=single, xleftmargin=2em]{cuda}	
@@ -552,20 +553,121 @@ A class called \texttt{gpu\_task} was created. This class is responsible for lau
 \mint[frame=none]{cpp}{std::ceil( float( vec_count ) / block_size ) * block_size}
 
 \noindent
-The \texttt{block\_size} is 128 and \texttt{vec\_count} is the number of input vectors of EACirc.
+The \texttt{block\_size} is number of threads in kernel block and \texttt{vec\_count} is the number of input vectors of EACirc.
 
-\chapter{Testing and benchmarking}
+\chapter{Validation and benchmarking}
 
-\section{Testing}
+The created GPU version of the software circuit was validated and then benchmarked. Since the performance of GPGPU is dependable on the used hardware and memory management, the achieved speed-up was measured using an experimental method with different settings of the circuit. The benchmarks took place on a machine which is being used at CRoCS laboratory for their own computations and is capable to run CUDA programs.
+
+\section{Validation}
+
+The validation of the new circuit implementation was done using integration tests. The GPU circuit was executed alongside the CPU circuit with the same input data and the results from both were compared. The input data were randomly generated from built-in eStream project~\cite{ukrop_thesis}. There were several thousands of runs and no differences of GPU outputs from CPU outputs were detected.
+
 \section{Benchmarking}
+
+The benchmarks took place on a machine equipped with NVIDIA GeForce~GTX~460 graphical card and Intel\textregistered\ Core\texttrademark~2~Duo~E8500 processor. Several settings of the GPU circuit were tested and their performance was compared.\footnote{The general settings of the circuit (i.e. input/output vector size, number of circuit layers, circuit layer width) were left to the default values because they could affect the success rate of the genetic algorithm, which is out of scope of this thesis.}
+
+\subsection{Block size}
+
+\begin{figure}[h]
+	\centering
+	\begin{tikzpicture}
+	\begin{axis}[
+	width=0.9\textwidth,height=6cm,
+	xlabel={Block size [1]},
+	ylabel={Time [$ms$]},
+	xmin=32, xmax=1024,
+	ymin=0.2, ymax=0.4,
+	xtick={0,128,...,1024},
+	ymajorgrids=true,
+	xmajorgrids=true,
+	grid style=dashed,
+	]
+	
+	\addplot
+	coordinates {
+		(32, 0.37776)(64, 0.23408)(96, 0.23888)(128, 0.271264)(160, 0.338464)(192, 0.326208)(224, 0.26112)(256, 0.282016)(288, 0.273024)(320, 0.303232)(352, 0.29648)(384, 0.313536)(416, 0.378208)(448, 0.322496)(480, 0.225312)(512, 0.223872)(544, 0.286656)(576, 0.375552)(608, 0.265088)(640, 0.307424)(672, 0.32992)(704, 0.305024)(736, 0.246144)(768, 0.277216)(800, 0.256096)(832, 0.255712)(864, 0.274752)(896, 0.26752)(928, 0.3512)(960, 0.260064)(992, 0.344224)(1024, 0.311936)
+	};
+	
+	\end{axis}
+	\end{tikzpicture}
+	\caption{Block size}
+	\label{fig:block_size}
+\end{figure}
+
+The first parameter affecting the performance is the \emph{block size} of kernel. The block size (among many other parameters such as register count per thread) is the main contributing factor to how many active warps per multiprocessor (SM) are running and how fast the kernel is executing.~\cite{cuda_best_practices}
+
+The figure~\ref{fig:block_size} shows the execution time of the kernel run with 10,000 input vectors depending on its block size. The block of 512 threads has the best performance according to these measurements.
+
+\subsection{GPU vs CPU}
+
+The performance of CPU and GPU versions of the circuit were compared according to the number of inputs vectors. The figure~\ref{fig:cpu_vs_gpu_performance} shows the time spent in order to process different amounts of vectors in logarithmic scales. The measured GPU time includes the amount of time to process the data and the additional time which is necessary to sent the input data to the device and to retrieve the results back. The CPU time includes only the time necessary to process the data because no additional coping is needed. The input vector refresh time is set to 100, i.e. with every hundredth circuit evaluation the input vectors are regenerated and must be copied to the device. 100 evaluations per one measurement were executed, so only one copy of input data was made.\footnote{This is the default settings of EACirc.}
+
+\begin{figure}[h]
+	\centering
+	\begin{tikzpicture}
+	\begin{loglogaxis}[
+	width=0.9\textwidth,height=10cm,
+	y label style={at={(axis description cs:-0.1,.2)},anchor=west},	
+	xlabel={Vector count [1]},
+	ylabel={Time [$ms$]},
+	log ticks with fixed point,
+	xmin=1000, xmax=256000,
+	ymin=0, ymax=100000,
+	ymajorgrids=true,
+	grid style=dashed,
+	legend pos=north west,
+	]
+	
+	\addplot coordinates {
+	(1000, 10.041)(2000, 9.317)(4000, 15.877)(8000, 23.575)(16000, 42.094)(32000, 60.696)(64000, 123.308)(128000, 223.331)(256000, 485.104)
+	};
+	\addplot coordinates {
+	(1000, 364.408)(2000, 665.742)(4000, 1426.367)(8000, 2900.807)(16000, 6052.413)(32000, 10535.213)(64000, 22244.065)(128000, 42228.197)(256000, 88626.516)
+	};
+	\legend{GPU, CPU}
+	
+	\end{loglogaxis}
+	\end{tikzpicture}
+	\caption{CPU vs GPU}
+	\label{fig:cpu_vs_gpu_performance}
+\end{figure}
+
+The next figure gives a more detailed view at the data shown in the previous graph~\ref{fig:cpu_vs_gpu_performance}. The figure~\ref{fig:speedup} shows the ratio of CPU and GPU performances according to the number of processed vectors, i.e. how many times the GPU circuit is faster than its CPU version, i.e the speed-up of the accelerated circuit.
+
+\begin{figure}[h]
+	\centering
+	\begin{tikzpicture}
+	\begin{axis}[
+	width=0.9\textwidth,height=6cm,
+	xlabel={Vector count [$1$]},
+	ylabel={$\frac{CPU_time}{GPU_time}$ [$1$]},
+	log ticks with fixed point,
+	xmin=0, xmax=256000,
+	ymajorgrids=true,
+	grid style=dashed,
+	legend pos=north west,
+	]
+	
+	\addplot coordinates {
+		(1000, 36.29)(2000, 71.45)(4000, 89.84)(8000, 123.04)(16000, 143.78)(32000, 173.57)(64000, 180.39)(128000, 189.08)(256000, 182.7)
+	};
+	
+	\end{axis}
+	\end{tikzpicture}
+	\caption{Overall speed-up}
+	\label{fig:speedup}
+\end{figure}
+
+According to the figure~\ref{fig:speedup}, at the beginning a sharp increase in speed-up can be seen. This is caused by the overhead around the GPU computation such as copying the data to/from the device. The execution of the circuit is most effective if it processes at least 16,000 input vectors\footnote{The default setting of the size of the input vector is 16 bytes.} per one evaluation of the circuit.
+
+Further analysis shows the speed-up that can be achieved with the GPU accelerated circuit. In its effective range the GPU circuit is approximately $160\times$ faster than its CPU version.
 
 \chapter{Conclusions and future work}
 
 The automated building of the EACirc project from the source files was unified across multiple platforms. For this purpose a CMake tool was added to the project dependencies. Despite the added dependency the project is now easier to be maintained. The previous automated build system suffered from code duplication, which is now solved through the CMake tool. During the CMake integration into the project the basic structure of EACirc was refactored in order to improve the compilation time and to introduce conditional building of distinct parts of EACirc.
 
-After the new build system had been properly tested, it was integrated into the EACirc development branch \texttt{eacirc-dev} of the project repository located on GitHub. The new build system is now being used by every EACirc developer.
-
-\bigskip
+After the new build system had been properly tested, it was integrated into the EACirc development branch \texttt{eacirc-dev} of the project repository located on GitHub~\cite{eacirc_repo}. The new build system is now being used by every EACirc developer.
 
 Now the EACirc program supports GPU accelerated computations using CUDA platform in order to speed-up the program execution. The support of the GPU acceleration may be turned on/off during the project compilation time.
 
@@ -576,12 +678,10 @@ The original CPU version of the circuit served as a starting point for the newly
 The original goal of this thesis was to develop another implementation of the circuit which would be runnable only on GPU. In addition to this, the created implementation should be capable of running not only on GPU but on CPU, too. This additional feature will be possible after a minor code adjustments. It is worth to do so, because it will solve the current issue of code duplication of the circuit.
 
 The created implementation of the circuit execution was validated via integration testing. The tests that were made did not detected any severe errors.
- 
-\bigskip
-\todo{results of speed-up and the hardware of machines used for benchmarking}
-\bigskip
 
-The GPU implementation of the circuit is expected to be integrated into the EACirc development branch \texttt{eacirc-dev} of the project repository located on GitHub and to be used by most of the EACirc users.
+The speed of the created GPU implementation was examined on GeForce~GTX~460 graphical card. It was discovered that the GPU circuit is most effective if its \emph{block size} is set to 512 and if it processes 16,000 input vectors per one evaluation of the circuit. If such conditions are respected the GPU circuit is approximately $160\times$ faster then its CPU version.
+
+The GPU implementation of the circuit is expected to be integrated into the development branch \texttt{eacirc-dev} of the project repository located on GitHub~\cite{eacirc_repo} and to be used by most of the EACirc users.
 
 \section{Future work}
 
@@ -591,14 +691,28 @@ The most trivial option is a multi-device execution of the created circuit. It w
 
 The next option is to work on the GPU implementation of the circuit to be runnable on CPU. This will lead to only one implementation of the circuit in project source files, which will prevent code duplication. To achieve this, the CUDA code must be adjusted so that it can be build via regular C++ compiler, and also a CPU job dispatcher must be implemented. This dispatcher could use the current multi-core CPU and run the execution of the circuit in parallel.
 
+Another option is closely examine the achieved performance of the circuit created in this thesis and suggest improvements that were not discussed in this thesis.
+
 The last but not least option is the evaluation of the circuit on CPU while another circuit is executed on GPU simultaneously. This would require a large intervention into the project design and the program execution path.
 
 
 
 
-
+\appendix
 \printbibliography[heading=bibintoc]
 %\listoflistings
 %\listoffigures
+
+
+\chapter{Data attachment}
+
+Follows the list of source codes included in data attachment:
+
+\begin{itemize}
+	\item \texttt{EACirc} \hfill \\
+	source codes of EACirc (copy of the entire EACirc git repository at commit \texttt{0be7206} which includes CUDA and CMake source files which were created within this thesis)
+	\item \texttt{thesis-src} \hfill \\
+	thesis text source files including bibliography and used images
+\end{itemize}
 
 \end{document}
